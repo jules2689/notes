@@ -24,10 +24,10 @@ Each node can contain random services, or it can contain specific ones. In the e
 
 Glossary (borrowed from [Karan Thukral](https://github.com/karanthukral))
 ---
-Cluster – The set of machines you are running the application on
-Node – A single machine
-Pods – A group of containers that work together to achieve a certain task. 
-Service – A way to externally expose (externally and internally) a set of pods that work together
-Labels – An arbitrary tag that can be places on kubernetes resources and can be used to filter on
-Selectors – Way for the user to identify a set of objects based on labels assigned to them
-Controller – A reconciliation loop that drives current state towards desired state
+- Cluster – The set of machines you are running the application on
+- Node – A single machine
+- Pods – A group of containers that work together to achieve a certain task. 
+- Service – A way to externally expose (externally and internally) a set of pods that work together
+- Labels – An arbitrary tag that can be places on kubernetes resources and can be used to filter on
+- Selectors – Way for the user to identify a set of objects based on labels assigned to them
+- Controller – A reconciliation loop that drives current state towards desired state
