@@ -3,21 +3,26 @@ Kubernetes is an orchestration layer to manage containerized applications. In a 
 
 Example:
 
+
+<!---
 ```diagram
 graph BT
   subgraph Kubernetes
-    Node1((Node1))-->Cluster
-    Node2((Node2))-->Cluster
-    Node3((Node3))-->Cluster
+    Node1((Node1))-\->Cluster
+    Node2((Node2))-\->Cluster
+    Node3((Node3))-\->Cluster
   end
   subgraph Node
-    App-->Node3
-    MySQL-->Node3
-    Redis-->Node3
-    Nginx-->Node3
+    App-\->Node3
+    MySQL-\->Node3
+    Redis-\->Node3
+    Nginx-\->Node3
   end
 Nginx---Internet
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/57bfba886cdabd6803742ab499d85e11.png' alt='diagram image' height='250px'>
+
 
 Each node can contain random services, or it can contain specific ones. In the example above, a node contains one of every service required to run an application. This means that if a node goes down, the work can be redistributed to other nodes, without any downtime, while Kubernetes also works on bringing that node back to life.
 
