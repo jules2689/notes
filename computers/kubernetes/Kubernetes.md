@@ -27,8 +27,9 @@ graph BT
 
 Each node can contain random services, or it can contain specific ones. In the example above, a node contains one of every service required to run an application. This means that if a node goes down, the work can be redistributed to other nodes, without any downtime, while Kubernetes also works on bringing that node back to life.
 
-Glossary (borrowed from [Karan Thukral](https://github.com/karanthukral))
+Glossary
 ---
+Borrowed from [Karan Thukral](https://github.com/karanthukral)
 - Cluster – The set of machines you are running the application on
 - Node – A single machine
 - Pods – A group of containers that work together to achieve a certain task. 
