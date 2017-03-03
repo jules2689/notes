@@ -3,20 +3,31 @@ Kubernetes is an orchestration layer to manage containerized applications. In a 
 
 Example:
 
-
-
-<!---
 ```diagram
 graph BT
-  Node1-\->Kubernetes
-  Node2-\->Kubernetes
-  Node3-\->Kubernetes
-  MySQL-\->Node
-  Redis-\->Node
-  App-\->Node
+  subgraph Kubernetes
+    Node1-->Cluster
+    Node2-->Cluster
+    Node3-->Cluster
+    subgraph Node
+      App-->Node3
+      MySQL-->Node3
+      Redis-->Node3
+      Nginx-->Node3
+      Proxy-->Nginx
+    end
+  end
+  Proxy---Internet
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/115f71ca7d6d0c20de793c3d38bdbfc3.png' alt='diagram image' height='250px'>
-
 
 Each node can contain random services, or it can contain specific ones. In the example above, a node contains one of every service required to run an application. This means that if a node goes down, the work can be redistributed to other nodes, without any downtime, while Kubernetes also works on bringing that node back to life.
+
+Glossary (borrowed from [Karan Thukral](https://github.com/karanthukral))
+---
+Cluster – The set of machines you are running the application on
+Node – A single machine
+Pods – A group of containers that work together to achieve a certain task. 
+Service – A way to externally expose (externally and internally) a set of pods that work together
+Labels – An arbitrary tag that can be places on kubernetes resources and can be used to filter on
+Selectors – Way for the user to identify a set of objects based on labels assigned to them
+Controller – A reconciliation loop that drives current state towards desired state
