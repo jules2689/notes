@@ -3,14 +3,15 @@ Kubernetes is an orchestration layer to manage containerized applications. In a 
 
 Example:
 
-```diagram
-Node --> Kubernetes
-Node --> Kubernetes
-Node --> Kubernetes
 
-MySQL --> Node
-Redis --> Node
-App Server --> Node
+```diagram
+graph BT
+  Node1-->Kubernetes
+  Node2-->Kubernetes
+  Node3-->Kubernetes
+  MySQL-->Node
+  Redis-->Node
+  App-->Node
 ```
 
 Each node can contain random services, or it can contain specific ones. In the example above, a node contains one of every service required to run an application. This means that if a node goes down, the work can be redistributed to other nodes, without any downtime, while Kubernetes also works on bringing that node back to life.
