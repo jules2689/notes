@@ -403,16 +403,14 @@ h3.masthead-title {
   border-top: 1px solid rgba(255,255,255,.1);
 }
 
-.sidebar-nav-item .nav-h2 {
-  font-size: 80%;
+.sidebar-nav-item.nav-h3 {
+  padding-left: 2.0rem;
+  font-size: 80% !important;
 }
 
-.sidebar-nav-item .nav-h3 {
-  font-size: 70%;
-}
-
-.sidebar-nav-item .nav-h4 {
-  font-size: 60%;
+.sidebar-nav-item.nav-h4 {
+  padding-left: 3.0rem;
+  font-size: 80% !important;
 }
 
 a.sidebar-nav-item-toc {
