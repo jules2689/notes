@@ -22,10 +22,9 @@
     </div>
 
     <script type="text/javascript">
-      // $(".content h2,.content h3,.content h4").each(function(i, item){
-      //   var tag = $(item).attr('id');
-      //   $(".sidebar-nav").append('<a class="sidebar-nav-item nav-' + item.localName + '" href="#' + tag + '">' + $(item).text() + '</a>');
-      // });
+      $( document ).ready(function() {
+        $("a[href='" + window.location.pathname.replace(/\/$/, "") + "']").parentsUntil('ol.tree').children('input').attr('checked', true);
+      });
     </script>
     <label for="sidebar-checkbox" class="sidebar-toggle"></label>
   </body>

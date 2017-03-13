@@ -36,7 +36,7 @@ def to_toc(toc_array, sidebar = false, prefix = '')
     if entry.is_a?(Hash)
       next if entry[:children].empty?
       sub_toc = to_toc(entry[:children], sidebar, File.join(prefix,entry[:data]))
-      list << "<li>#{section_title(entry, prefix)}#{sub_toc}</li>"
+      list << "<li #{"class='file'" if sidebar}>#{section_title(entry, sidebar, prefix)}#{sub_toc}</li>"
     else
       entry_wo_ext = if File.extname(entry) == '.html' || File.extname(entry) == '.md'
         entry.split('.')[0..-2].join('.')
@@ -44,16 +44,23 @@ def to_toc(toc_array, sidebar = false, prefix = '')
         entry
       end
       next if entry_wo_ext == 'index' || entry_wo_ext == 'README'
-      list << "<li><a href='#{File.join(prefix, entry_wo_ext)[1..-1]}'>#{humanize(entry_wo_ext)}</a></li>"
+      href = File.join(prefix, entry_wo_ext)
+      list << "<li #{"class='file'" if sidebar} ><a href='#{href}'>#{humanize(entry_wo_ext)}</a></li>"
     end
   end
-  "<ul class='#{sidebar ? 'sidebar-nav-item' : ''}'>" + list.join + "</ul>"
+
+  if sidebar
+    "<ol#{prefix == '' ? ' class="tree"' : ''}>" + list.join + "</ol>"
+  else
+    "<ul>" + list.join + "</ul>"
+  end
 end
 
-def section_title(entry, prefix)
-  if entry[:children].include?('README.md') || entry[:children].include?('index.html')
-    href = File.join(prefix, entry[:data])[1..-1]
-    "<p><a href='#{href}'>#{humanize(entry[:data])}</a></p>"
+def section_title(entry, sidebar, prefix)
+  if sidebar
+    title = humanize(entry[:data])
+    "<label for='#{entry[:data]}'>#{title}</label>" +
+    "<input type='checkbox' id='#{entry[:data]}' />"
   else
     "<p>#{humanize(entry[:data])}</p>"
   end
