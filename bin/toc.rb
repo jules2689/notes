@@ -30,20 +30,24 @@ def directory_hash(path, name=nil)
   data
 end
 
-def to_toc(toc_array, prefix = "")
+def to_toc(toc_array, sidebar = false, prefix = '')
   list = []
   toc_array.each do |entry|
     if entry.is_a?(Hash)
       next if entry[:children].empty?
-      sub_toc = to_toc(entry[:children], File.join(prefix,entry[:data]))
+      sub_toc = to_toc(entry[:children], sidebar, File.join(prefix,entry[:data]))
       list << "<li>#{section_title(entry, prefix)}#{sub_toc}</li>"
     else
-      entry_wo_ext = entry.split('.')[0..-2].join('.')
+      entry_wo_ext = if File.extname(entry) == '.html' || File.extname(entry) == '.md'
+        entry.split('.')[0..-2].join('.')
+      else
+        entry
+      end
       next if entry_wo_ext == 'index' || entry_wo_ext == 'README'
       list << "<li><a href='#{File.join(prefix, entry_wo_ext)[1..-1]}'>#{humanize(entry_wo_ext)}</a></li>"
     end
   end
-  "<ul>" + list.join + "</ul>"
+  "<ul class='#{sidebar ? 'sidebar-nav-item' : ''}'>" + list.join + "</ul>"
 end
 
 def section_title(entry, prefix)
@@ -67,8 +71,15 @@ end
 
 path = File.expand_path('../../', __FILE__)
 toc_hash = directory_hash(path)
-html = to_toc(toc_hash[:children]) 
-beautiful = HtmlBeautifier.beautify(html)
 
+# Main TOC
+html = to_toc(toc_hash[:children], false) 
+beautiful = HtmlBeautifier.beautify(html)
 path = File.expand_path('../../_includes/toc.html', __FILE__)
+File.write(path, beautiful)
+
+# Sidebar TOC
+html = to_toc(toc_hash[:children], true) 
+beautiful = HtmlBeautifier.beautify(html)
+path = File.expand_path('../../_includes/sidebar_toc.html', __FILE__)
 File.write(path, beautiful)
