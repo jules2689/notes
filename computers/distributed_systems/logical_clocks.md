@@ -25,6 +25,8 @@ Event ordering can be based on any number of factors. In a local system, CPU tim
 - If `A -> B` then `timestamp(A) < timestamp(B)`
 
 ### Lamport’s Algorithm
+
+<!---
 ```diagram
 sequenceDiagram
 Note left of i: Logical Clock: L(i)
@@ -35,6 +37,9 @@ i->>j: Event Sent. Send L(i)
 j->>j: Event Received. L(j) = MAX(L(i), L(J)) + 1
 end
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8df698ce798b092930d7fb6955a38bc6.png' alt='diagram image' height='250px'>
+
 
 **Note**: `A -> B` implies `L(A) < L(B)`, but `L(A) < L(B)` does not necessarily imply `A -> B`. In other words, `A -> B` implies that the logical clock of A is less than that of B, but the logical clock of A being less than that of B does *not* imply that `A -> B`.
 
@@ -59,6 +64,8 @@ Assumptions:
 
 Process `P(i)` will send out a message `M(i)` to all others with timestamp `T(i)`. An incoming message is queued according to it's timestamp. `P(i)` will pass a message to its own application if it meets 2 criteria: the message is at the head of the queue, the message has been acked by all other processes.
 
+
+<!---
 ```diagram
 sequenceDiagram
 P(j)->>P(i): Puts Message m(j) at t=1
@@ -88,5 +95,8 @@ P(j)->>P(j): Perform Message m(i)
 P(k)->>P(k): Perform Message m(i)
 end
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/598942c362d82725a25fd056b83001b8.png' alt='diagram image' height='250px'>
+
 
 All processes will end up with the same messages with the same timestamps, so order can be sorted out locally and therefore all messages are delivered in the same order.
