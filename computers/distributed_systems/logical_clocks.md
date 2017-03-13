@@ -8,11 +8,13 @@ Logical clocks are used to agree on order in which events occur. The absolute/re
 Event ordering can be based on any number of factors. In a local system, CPU time can be used. But in a distributed system, there is no perfectly synchronized time or clock that can be used, and local times may not be in sync (and probably are not). [Lamport](https://en.wikipedia.org/wiki/Leslie_Lamport) suggested a logical clock be used to address this.
 
 #### Key concepts
+
 - Processes exchange messages
-– Message must be sent before received
-– Send/receive used to order events and synchronize logical clocks
+- Message must be sent before received
+- Send/receive used to order events and synchronize logical clocks
 
 #### Properties
+
 - If A happens before B in the same process (or system), then `A -> B`
 - `A -> B` also means that A sent the message and B means the receipt of it
 - Relation is transitive: e.g `A -> B` and `B -> C` implies `A -> C`
