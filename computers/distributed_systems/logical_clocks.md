@@ -38,7 +38,7 @@ j->>j: Event Received. L(j) = MAX(L(i), L(J)) + 1
 end
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8df698ce798b092930d7fb6955a38bc6.png' alt='diagram image' height='250px'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8df698ce798b092930d7fb6955a38bc6.png' alt='diagram image' height='450px'>
 
 
 **Note**: `A -> B` implies `L(A) < L(B)`, but `L(A) < L(B)` does not necessarily imply `A -> B`. In other words, `A -> B` implies that the logical clock of A is less than that of B, but the logical clock of A being less than that of B does *not* imply that `A -> B`.
@@ -96,7 +96,7 @@ P(k)->>P(k): Perform Message m(i)
 end
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/598942c362d82725a25fd056b83001b8.png' alt='diagram image' height='250px'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/598942c362d82725a25fd056b83001b8.png' alt='diagram image' width='100%'>
 
 
 All processes will end up with the same messages with the same timestamps, so order can be sorted out locally and therefore all messages are delivered in the same order.
