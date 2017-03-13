@@ -2,12 +2,14 @@ checkout:
   post:
     - git submodule sync
     - git submodule update --init # use submodules
+    - gem install htmlbeautifier
 
 test:
   override:
     - ruby ./.diatex/diatex ../
+    - ruby ./bin/toc.rb
     - git config --global user.email "julian+bot@jnadeau.ca" && git config --global user.name "Julian Bot"
     - git status
     - git add --all .
-    - git commit -m 'Convert latex and diagram to images' || true
+    - git commit -m 'Convert latex and diagram to images. Re-gen table of contents' || true
     - git push origin master || true

@@ -1,10 +1,7 @@
 #!/usr/bin/env ruby
 
-require 'byebug'
 require 'json'
 require 'htmlbeautifier'
-
-
 
 IGNORED_DIRS = %w(assets bin public)
 ALLOWED_EXTS = %w(.md .html .pdf)
