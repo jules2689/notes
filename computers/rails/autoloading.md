@@ -50,7 +50,10 @@ Load-- Class definition does not match file -\->LoadError[LoadError: Expected `f
 
 
 ### Problem
-In the code snippet below, class `A` defines a class `B`. This means that the constant `B` is now defined. In the diagram above, we see that the un-nested class `B` depends on the `ConstantMissing` error to load it during auto-load. However, since `A::B` is defined, a `ConstantMissing` hook will never happen as `B` will resolve to `A::B` - and thus `B` will never be loaded.
+
+Load order dependency issues can happen due to nested class defintions.
+
+In the code snippet below, class `A` defines a class `B`. This means that the constant `B` is now defined. In the diagram above, we see that the un-nested class `B` depends on the `ConstantMissing` error to load it during auto-load. However, since `A::B` is defined, a `ConstantMissing` hook will never happen as `B` will resolve to `A::B`.
 
 ```ruby
 class A
@@ -62,3 +65,6 @@ class B
 end
 ```
 
+In particular, from the diagram above, this part never happens.
+
+<img src='https://jules2689.github.io/gitcdn/images/website/doesnt_happen.png' alt='diagram image'>
