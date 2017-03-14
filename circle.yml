@@ -6,7 +6,7 @@ general:
 checkout:
   post:
     - git submodule sync
-    - git submodule update --init # use submodules
+    - git submodule update --init --recursive --remote # use submodules
     - gem install htmlbeautifier
 
 test:
@@ -14,12 +14,14 @@ test:
     - git fetch
     - git config --global user.email "julian+bot@jnadeau.ca" && git config --global user.name "Julian Bot"
 
+    # Convert Images and Diagrams for Notes
     - ruby ./.diatex/diatex ../
     - git status
     - git add --all .
     - git commit -m 'Convert latex and diagram to images. Re-gen table of contents' || true
     - git push origin master || true
 
+    # Publish the Github Pages Site
     - mv jekyll/* .
     - rm -rf jekyll
     - ruby ./bin/toc.rb
