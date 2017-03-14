@@ -7,6 +7,9 @@ description:         'I am a production engineer at Shopify. I work on Developer
 url:                 'http://notes.jnadeau.ca'
 baseurl:             ''
 
+gems:
+  - jekyll-git_metadata
+
 # About/contact
 author:
   name:              Julian Nadeau
