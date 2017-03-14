@@ -74,7 +74,7 @@ body {
 
 .container {
   max-width: 50%;
-  min-width: 400px;
+  min-width: 300px;
   padding-left:  1rem;
   padding-right: 1rem;
   margin-left:  auto;
@@ -222,9 +222,9 @@ blockquote p:last-child {
 img {
   display: block;
   width: 600px;
-  max-width: 600px;
+  max-width: 100%;
+  height: auto;
   margin: 0 auto;
-  border-radius: 5px;
 }
 
 /* Tables */
@@ -817,6 +817,9 @@ ol.bibliography {
     top: 0;
     padding-bottom: 10px;
     border-bottom: 1px solid #ccc;
+  }
+  .page-toc:empty {
+    border-bottom: none;
   }
 }
 
