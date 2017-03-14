@@ -13,3 +13,8 @@ test:
     - git add --all .
     - git commit -m 'Convert latex and diagram to images. Re-gen table of contents' || true
     - git push origin master || true
+    - git checkout gh-pages
+    - mv jekyll/* .
+    - git add --all .
+    - git commit -m 'Build jekyll site' || true
+    - git push origin gh-pages || true
