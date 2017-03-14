@@ -11,11 +11,12 @@ li.file {
     margin-left: -1px !important;
 }
 li.file a {
-    background: url(/public/assets/menu/document.png) 0 0 no-repeat;
     color: #fff;
-    padding-left: 21px;
     text-decoration: none;
     display: block;
+}
+li.file a:before {
+    content: '↳';
 }
 li input {
     position: absolute;
@@ -29,7 +30,7 @@ li input {
     top: 0;
 }
 li input + ol {
-    margin: -0.938em 0 0 -44px;
+    margin: -0.938em 0 0 -61px;
     /* 15px */
     
     height: 1em;
@@ -40,13 +41,14 @@ li input + ol > li {
     padding-left: 1px;
 }
 li label {
-    background: url(/public/assets/menu/folder-horizontal.png) 15px 1px no-repeat;
     cursor: pointer;
     display: block;
-    padding-left: 37px;
+}
+li label:before {
+    content: '↳';
 }
 li input:checked + ol {
-    margin: -1.55em 0 0 -44px;
+    margin: -1.55em 0 0 -61px;
     /* 20px */
     
     padding: 1.563em 0 0 80px;
