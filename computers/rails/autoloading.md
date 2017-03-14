@@ -4,6 +4,8 @@ An issue arises however that large amounts of code that are not needed for boot 
 
 The diagram below shows how files and classes are autoloaded.
 
+
+<!---
 ```diagram
 graph TD
 subgraph Autoloading
@@ -26,23 +28,26 @@ subgraph Parsing
 end
 
 %% Autoloading
-Entry[Start Here]-->Autoload
-Autoload-- Empty Autoload Path -->Finished
-Autoload-- Load path from autoload path -->Load
+Entry[Start Here]-\->Autoload
+Autoload-- Empty Autoload Path -\->Finished
+Autoload-- Load path from autoload path -\->Load
 
 %% AutoloadPath Paths
-AutoloadPath--Cannot find a class to match Constant -->NameError[NameError: uninitialized constant MyConstant]
-AutoloadPath-- Find file that matches the Constant -->Load[Load File]
+AutoloadPath--Cannot find a class to match Constant -\->NameError[NameError: uninitialized constant MyConstant]
+AutoloadPath-- Find file that matches the Constant -\->Load[Load File]
 
 %% Parse Paths
-Parse-- Encounter Constant we don't know -->AutoloadPath
+Parse-- Encounter Constant we don't know -\->AutoloadPath
 Parse-. Finished Parsing .->Autoload
 
 %% Load Paths
-Load-- Class definition matches file -->Parse[Parse Class]
-Load-- Class definition does not match file -->LoadError[LoadError: Expected `file` to define Class]
+Load-- Class definition matches file -\->Parse[Parse Class]
+Load-- Class definition does not match file -\->LoadError[LoadError: Expected `file` to define Class]
 %% Load-. Finished Loading Class .->Autoload
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/0f5e2e3da6b82b2ac0c974d9c82e0297.png' alt='diagram image' height='250px'>
+
 
 ### Problem
 In the code snippet below, class `A` defines a class `B`. This means that the constant `B` is now defined. In the diagram above, we see that the un-nested class `B` depends on the `ConstantMissing` error to load it during auto-load. However, since `A::B` is defined, a `ConstantMissing` hook will never happen as `B` will resolve to `A::B` - and thus `B` will never be loaded.
