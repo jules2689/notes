@@ -46,7 +46,7 @@ Load-- Class definition does not match file -\->LoadError[LoadError: Expected `f
 %% Load-. Finished Loading Class .->Autoload
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/0f5e2e3da6b82b2ac0c974d9c82e0297.png' alt='diagram image' height='250px'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/0f5e2e3da6b82b2ac0c974d9c82e0297.png' alt='diagram image' class='full-width'>
 
 
 ### Problem

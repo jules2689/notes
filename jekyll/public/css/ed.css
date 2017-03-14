@@ -225,6 +225,10 @@ img {
   margin: 0 auto;
 }
 
+img.full-width {
+  width: 100%;
+}
+
 /* Tables */
 table {
   margin-bottom: 1rem;
