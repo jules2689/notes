@@ -21,6 +21,7 @@ test:
     - git push origin master || true
 
     - mv jekyll/* .
+    - rm -rf jekyll
     - ruby ./bin/toc.rb
     - git status
     - git add --all .
