@@ -393,16 +393,6 @@ h3.masthead-title {
   border-top: 1px solid rgba(255,255,255,.1);
 }
 
-.sidebar-nav-item.nav-h3 {
-  padding-left: 2.0rem;
-  font-size: 80% !important;
-}
-
-.sidebar-nav-item.nav-h4 {
-  padding-left: 3.0rem;
-  font-size: 80% !important;
-}
-
 a.sidebar-nav-item-toc {
   color: rgba(255,255,255,.8);
 }
@@ -810,5 +800,25 @@ ol.bibliography {
 	text-indent: -1rem;
 }
 
+.page-toc {
+  width: 350px;
+  float: left;
+  top: 150px;
+  position: fixed;
+}
 
+@media (max-width: 768px) {
+  .page-toc {
+    display: block;
+  }
+}
 
+.page-toc-h3 {
+  padding-left: 2.0rem;
+  font-size: 80% !important;
+}
+
+.page-toc-h4 {
+  padding-left: 3.0rem;
+  font-size: 80% !important;
+}
