@@ -10,7 +10,7 @@
 
   <nav class="sidebar-nav">
     <a class="sidebar-nav-item{% if page.url == site.baseurl %} active{% endif %}" href="{{ site.baseurl }}/">Home</a>
-    <a class="sidebar-nav-item" href="https://github.com/jules2689/notes" target="_blank">GitHub source</a>
+    <a class="sidebar-nav-item" href="{{site.github_source}}" target="_blank">GitHub source</a>
     <p class="sidebar-nav-item nav-p">Site-wide Table of Contents</p>
     {% include sidebar_toc.html %}
   </nav>
