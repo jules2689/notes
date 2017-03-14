@@ -215,8 +215,6 @@ blockquote p:last-child {
   }
 }
 
-
-
 /* Images */
 
 img {
@@ -831,4 +829,8 @@ ol.bibliography {
 .page-toc-h4 {
   padding-left: 3.0rem;
   font-size: 80% !important;
+}
+
+article {
+  word-break: break-word;
 }
