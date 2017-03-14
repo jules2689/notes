@@ -1,3 +1,8 @@
+general:
+  branches:
+    only:
+      - master
+
 checkout:
   post:
     - git submodule sync
@@ -6,15 +11,18 @@ checkout:
 
 test:
   override:
-    - ruby ./.diatex/diatex ../
-    - ruby ./bin/toc.rb
+    - git fetch
     - git config --global user.email "julian+bot@jnadeau.ca" && git config --global user.name "Julian Bot"
+
+    - ruby ./.diatex/diatex ../
     - git status
     - git add --all .
     - git commit -m 'Convert latex and diagram to images. Re-gen table of contents' || true
     - git push origin master || true
-    - git checkout gh-pages
+
     - mv jekyll/* .
+    - ruby ./bin/toc.rb
+    - git status
     - git add --all .
     - git commit -m 'Build jekyll site' || true
-    - git push origin gh-pages || true
+    - git push origin HEAD:gh-pages -f || true
