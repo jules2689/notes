@@ -838,3 +838,7 @@ ol.bibliography {
 article {
   word-break: break-word;
 }
+
+.hide-on-website {
+  display: none;
+}

@@ -93,4 +93,6 @@ class rv_name_error2 error;
 ```
 --->
 
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/92aa935635236bf4f8412ece7cd8cf95.png' alt='diagram image' class='hide-on-website'>
+
 <div id="svg_element" data="/computers/rails/const_get.svg" transform="matrix(0.6038552522659302,0,0,0.6038552522659302,-127.64702339933865,-146.4327788028604)"></div>
