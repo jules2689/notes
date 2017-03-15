@@ -92,6 +92,6 @@ class rb_eTypeError error;
 class rv_name_error2 error;
 ```
 --->
-<object type="image/svg+xml" data="/computers/rails/const_get.svg">
-  Your browser does not support SVG
-</object>
+
+<svg_element data="/computers/rails/const_get.svg" />
+<div id="svg_element"></div>
