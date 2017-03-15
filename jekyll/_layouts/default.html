@@ -41,7 +41,7 @@
           xmlHttp.open( "GET", $('svg_element').attr('data'), false);
           xmlHttp.send( null );
           document.getElementById('svg_element').innerHTML = xmlHttp.responseText;
-          $('svg').svgPan('viewport', true, true, false, .5);
+          $('#svg_element svg').svgPan('viewport');
         }
       });
     </script>
