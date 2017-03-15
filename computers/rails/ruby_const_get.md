@@ -92,4 +92,6 @@ class rb_eTypeError error;
 class rv_name_error2 error;
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/92aa935635236bf4f8412ece7cd8cf95.png' alt='diagram image' class='full-width'>
+<object type="image/svg+xml" data="/computers/rails/const_get.svg">
+  Your browser does not support SVG
+</object>
