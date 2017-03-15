@@ -41,7 +41,7 @@
           xmlHttp.open( "GET", $('svg_element').attr('data'), false);
           xmlHttp.send( null );
           document.getElementById('svg_element').innerHTML = xmlHttp.responseText;
-          $('#viewport').attr('transform', 'matrix(0.9240345346828462,0,0,0.9240345346828462,427.4995349244402,399.0884233275848)');
+          $('#viewport').attr('transform', $('svg_element').attr('transform'));
           $('#svg_element svg').svgPan('viewport');
         }
       });
