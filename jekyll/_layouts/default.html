@@ -35,15 +35,6 @@
             $(".page-toc").append('<p><a class="page-toc-' + item.localName + '" href="#' + tag + '">' + $(item).text() + '</a></p>');
           });
         }
-
-        if($('#svg_element').length > 0) {
-          var xmlHttp = new XMLHttpRequest();
-          xmlHttp.open( "GET", $('#svg_element').attr('data'), false);
-          xmlHttp.send( null );
-          document.getElementById('svg_element').innerHTML = xmlHttp.responseText;
-          $('#viewport').attr('transform', $('#svg_element').attr('transform'));
-          $('#svg_element svg').svgPan('viewport');
-        }
       });
     </script>
     <label for="sidebar-checkbox" class="sidebar-toggle"></label>
