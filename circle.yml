@@ -18,7 +18,7 @@ test:
     - ruby ./.diatex/diatex ../
     - git status
     - git add --all .
-    - git commit -m 'Convert latex and diagram to images. Re-gen table of contents' || true
+    - git commit -m 'Convert latex and diagram to images' || true
     - git push origin master || true
 
     # Publish the Github Pages Site
