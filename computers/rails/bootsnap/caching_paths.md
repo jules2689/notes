@@ -2,8 +2,8 @@
 
 ---
 
-- [Overview](bootsnap)
-- [Caching Paths](caching_paths)
+- [Overview](../bootsnap)
+- [Caching Paths](../caching_paths)
 
 ---
 
