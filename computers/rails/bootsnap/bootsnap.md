@@ -4,6 +4,7 @@
 
 - [Overview](../bootsnap)
 - [Caching Paths](../caching_paths)
+- [Path Scanner](../path_scanner)
 
 ---
 

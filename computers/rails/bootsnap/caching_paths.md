@@ -4,6 +4,7 @@
 
 - [Overview](../bootsnap)
 - [Caching Paths](../caching_paths)
+- [Path Scanner](../path_scanner)
 
 ---
 
@@ -12,7 +13,7 @@ Caching paths is the main function of bootsnap. Previously, I mentioned that Boo
 - **Stable**: For Gems and Rubies since these are highly unlikely to change
 - **Volatile**: For everything else, like your app code, since this is likely to change
 
-This path is shown in the flowchart below:
+This path is shown in the flowchart below. In a number of instances, `scan` is mentioned. This refers to the operation performed by the [Path Scanner](../path_scanner).
 
 
 <!---
