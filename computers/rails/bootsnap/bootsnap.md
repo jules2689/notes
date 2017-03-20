@@ -57,3 +57,5 @@ end
 ```
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/432d52f1123c0bbd45090115ebfe12da.png' alt='diagram image'>
+
+In this diagram, you might notice that we refer to `cache` and `autoload_path_cache` as the main points of override. These are calculated using the concepts described in [Caching Paths](../caching_paths).

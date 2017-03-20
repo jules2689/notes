@@ -13,7 +13,7 @@ SKIP_UP_TO_DATE = false
 def paths(file)
   infile = File.expand_path(file)
   raise "file must be in #{SRC}" unless infile.start_with?(SRC)
-  outfile = BUILD + infile[SRC.length..-1].sub(/\.md$/, '.html')
+  outfile = BUILD + infile[SRC.length..-1].sub(/\.md$/, '')
   [infile, outfile]
 end
 
