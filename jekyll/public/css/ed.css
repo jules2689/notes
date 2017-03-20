@@ -73,7 +73,7 @@ body {
  */
 
 .container {
-  max-width: 50%;
+  max-width: 90%;
   min-width: 300px;
   padding-left:  1rem;
   padding-right: 1rem;
@@ -219,8 +219,9 @@ blockquote p:last-child {
 
 img {
   display: block;
-  width: 600px;
+  width: 100%;
   max-width: 100%;
+  min-width: 300px;
   height: auto;
   margin: 0 auto;
 }
