@@ -57,6 +57,6 @@ end
 We do not take mtimes into account for stable caches. This is a more expensive operation so we avoid it when we can (this avoids as many filesystem calls as we can).
 
 - This means for a "stable" cache, we simply use `0` as the mtime for all files, so there is no effect on the cache heuristic.
-- For a "volatile" cache however, we find the maximum mtime of all files and directories in the given path. This means that if any file within a directory is changed, the cache is invalidated.
+- For a "volatile" cache however, we find the maximum mtime of all files and directories in the given path. This means that if any file within a directory is added or removed, the cache is invalidated.
    - Note, the mtime is initialized at `-1`, so if the path doesn't exist, `-1` will be returned.
 
