@@ -6,13 +6,15 @@ Bootsnap creates 2 kinds of caches, a stable, long lived cache out of Ruby and G
 
 Below is a diagram explaining how the overrides work.
 
+
+<!---
 ```diagram
 graph TD
 
 subgraph Bootsnap Object
   cache
   autoload_path_cache
-  store-->cache
+  store-\->cache
 end
 
 subgraph ActiveSupport
@@ -23,11 +25,11 @@ subgraph ActiveSupport
 end
 
 subgraph ActiveSupport Overrides
-  autoload_path=--reinitializes-->autoload_path_cache
+  autoload_path=--reinitializes-\->autoload_path_cache
   autoloadable_module?-.has_dir?.->autoload_path_cache
   search_for_file-.with cache.->autoload_path_cache
   search_for_file-.without cache.->search_for_fileSuper
-  search_for_file-->remove_constant
+  search_for_file-\->remove_constant
   remove_constant-.->remove_constantSuper
 
   depend_onExt[depend_on]
@@ -46,3 +48,6 @@ subgraph Kernel Require Overrides
   Module#autoload-.->cache
 end
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/432d52f1123c0bbd45090115ebfe12da.png' alt='diagram image' height='250px'>
+
