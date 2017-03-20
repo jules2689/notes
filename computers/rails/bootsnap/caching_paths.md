@@ -14,38 +14,43 @@ Caching paths is the main function of bootsnap. Previously, I mentioned that Boo
 
 This path is shown in the flowchart below:
 
+
+<!---
 ```diagram
 graph TD
 
-Entry[Starting Point]-->pathInGem
+Entry[Starting Point]-\->pathInGem
 
 subgraph Stability Check
-  pathInGem[is the path in a gem?]--yes-->Stable
-  pathInGem--No-->pathInRuby[is the path in a Ruby install?]
-  pathInRuby--Yes-->Stable
-  pathInRuby--No-->Volatile
+  pathInGem[is the path in a gem?]--yes-\->Stable
+  pathInGem--No-\->pathInRuby[is the path in a Ruby install?]
+  pathInRuby--Yes-\->Stable
+  pathInRuby--No-\->Volatile
 end
 
 subgraph Stable Cache
-  Stable-->GetStableEntriesDir[get entries and directories for path from cache]
-  GetStableEntriesDir--got entries-->StableCacheHit[Cache Hit!]
-  StableCacheHit-->StableReturn
-  GetEntriesDir--did not get entries-->StableCacheMiss[Cache Miss. Scan for entries and dirs. Expensive]
-  StableCacheMiss-->StoreStableCache[store result in cache with mtime of 0, since we dont use it for stable]
-  StoreStableCache-->StableReturn[ Return entries, dirs]
+  Stable-\->GetStableEntriesDir[get entries and directories for path from cache]
+  GetStableEntriesDir--got entries-\->StableCacheHit[Cache Hit!]
+  StableCacheHit-\->StableReturn
+  GetEntriesDir--did not get entries-\->StableCacheMiss[Cache Miss. Scan for entries and dirs. Expensive]
+  StableCacheMiss-\->StoreStableCache[store result in cache with mtime of 0, since we dont use it for stable]
+  StoreStableCache-\->StableReturn[ Return entries, dirs]
 end
 
 subgraph Volatile Cache
-  Volatile-->GetVolatileEntriesDir[get entries and directories for path from cache]
-  GetVolatileEntriesDir-->LatestMTime[Get latest mtime from dir and entries]
-  LatestMTime--mtime = -1-->ReturnEmpty[Path doesn't exist, return empty dir and entries]
-  LatestMTime--mtime==cached_mtime-->VolatileCacheHit[Cache Hit!]
-  VolatileCacheHit-->VolatileReturn[Return dir and entries]
-  LatestMTime--else-->VolatileCacheMiss[Cache Miss. Scan for entries and dirs. Expensive]
-  VolatileCacheMiss-->StoreVolatileCache[store result in cache with mtime intact since we use it for volatile cache]
-  StoreVolatileCache-->VolatileReturn
+  Volatile-\->GetVolatileEntriesDir[get entries and directories for path from cache]
+  GetVolatileEntriesDir-\->LatestMTime[Get latest mtime from dir and entries]
+  LatestMTime--mtime = -1-\->ReturnEmpty[Path doesn't exist, return empty dir and entries]
+  LatestMTime--mtime==cached_mtime-\->VolatileCacheHit[Cache Hit!]
+  VolatileCacheHit-\->VolatileReturn[Return dir and entries]
+  LatestMTime--else-\->VolatileCacheMiss[Cache Miss. Scan for entries and dirs. Expensive]
+  VolatileCacheMiss-\->StoreVolatileCache[store result in cache with mtime intact since we use it for volatile cache]
+  StoreVolatileCache-\->VolatileReturn
 end
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/af594c5a28b77d05ea939fe830bc3090.png' alt='diagram image' height='250px'>
+
 
 ### Mtimes (modified times) of files and directories
 
