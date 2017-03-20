@@ -7,7 +7,7 @@ IGNORED_DIRS = %w(assets bin public)
 ALLOWED_EXTS = %w(.md .html .pdf)
 
 def directory_hash(path, name=nil)
-  data = {:data => (name || path)}
+  data = { data: (name || path) }
   data[:children] = children = []
   Dir.foreach(path) do |entry|
     # Skip Hidden Files

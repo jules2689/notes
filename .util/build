@@ -1,0 +1,110 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require 'open3'
+
+ROOT  = File.expand_path('../..', __FILE__)
+UTIL  = ROOT + '/.util'
+SRC   = ROOT + '/'
+BUILD = ROOT + '/docs/'
+
+SKIP_UP_TO_DATE = false
+
+def paths(file)
+  infile = File.expand_path(file)
+  raise "file must be in #{SRC}" unless infile.start_with?(SRC)
+  outfile = BUILD + infile[SRC.length..-1].sub(/\.md$/, '.html')
+  [infile, outfile]
+end
+
+def up_to_date?(infile, outfile)
+  File.exist?(outfile) && File.mtime(outfile) >= File.mtime(infile)
+end
+
+def notify_up_to_date(infile, outfile)
+  o = 'docs/' + outfile[BUILD.length..-1]
+  puts "\e[1;35m% \e[32m#{o}\e[35m already built. \e[0m"
+end
+
+def notify_build(infile, outfile)
+  i = infile[SRC.length..-1]
+  o = 'docs/' + outfile[BUILD.length..-1]
+  print "\e[1;34m% \e[32m#{i} \e[34m~> \e[32m#{o}\e[34m... \e[0m"
+  if yield
+    puts "\e[1;34mdone!\e[0m"
+  else
+    puts "\e[1;31mfailed!\e[0m"
+  end
+end
+
+def build_file(f, preview: false)
+  infile, outfile = paths(f)
+  if SKIP_UP_TO_DATE && up_to_date?(infile, outfile)
+    notify_up_to_date(infile, outfile)
+    return
+  end
+
+  FileUtils.mkpath(File.dirname(outfile))
+
+  notify_build(infile, outfile) do
+    Dir.chdir(UTIL) do
+      system(
+        { 'PATH' => "/usr/local/bin:#{UTIL}/node_modules/.bin:#{ENV['PATH']}" },
+        'pandoc',
+        '--from', 'markdown',
+        '--to', 'html5',
+        '--filter', "#{UTIL}/caching-mermaid-filter",
+        #'--filter', "#{UTIL}/node_modules/.bin/mermaid-filter",
+        '--template', "#{UTIL}/pandoc.template",
+        '--output', outfile,
+        infile
+      )
+    end
+  end
+  preview_html(outfile) if preview
+end
+
+def preview_html(path)
+  path = File.expand_path(path)
+  osascript = <<-END
+    tell application "Google Chrome"
+      set notOpen to true
+      set windowList to every window
+      repeat with aWindow in windowList
+        set tabList to every tab of aWindow
+        repeat with atab in tabList
+          if (URL of atab contains "#{path}") then
+            set notOpen to false
+            tell atab to reload
+          end if
+        end repeat
+      end repeat
+      if notOpen then
+        open location "file://#{path}"
+      end if
+    end tell
+  END
+
+  o, s = Open3.capture2('osascript', stdin_data: osascript)
+  unless s.success?
+    puts o
+    raise
+  end
+end
+
+def main(*argv)
+  FileUtils.mkdir_p(BUILD)
+  $stdout.sync = true
+
+  if argv.empty?
+    Dir.glob('src/**/*.md').each do |f|
+      build_file(f)
+    end
+  else
+    argv.each do |f|
+      build_file(f, preview: true)
+    end
+  end
+end
+
+main(*ARGV) if __FILE__ == $0

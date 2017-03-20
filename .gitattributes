@@ -1,5 +1,2 @@
-assets/* linguist-vendored
-public/* linguist-vendored
-_includes/* linguist-vendored
-_layouts/* linguist-vendored
-index.html linguist-vendored
+jekyll/* linguist-vendored
+.util/* linguist-vendored

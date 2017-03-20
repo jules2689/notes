@@ -1,0 +1,79 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'digest/sha2'
+require 'open3'
+require 'fileutils'
+
+class Filter # :nodoc:
+  def initialize(&block)
+    @block = block
+  end
+
+  def run(input)
+    doc = JSON.parse(input)
+    out = walk(doc)
+    JSON.dump(out)
+  end
+
+  def walk(x)
+    if x.is_a?(Array)
+      result = []
+      x.each do |item|
+        if item.is_a?(Hash) && item.key?('t')
+          res = @block.call(item['t'], item['c'])
+          if !res
+            result.push(walk(item))
+          elsif res.is_a?(Array)
+            res.each do |z|
+              result.push(walk(z))
+            end
+          else
+            result.push(walk(res))
+          end
+        else
+          result.push(walk(item))
+        end
+      end
+      result
+    elsif x.is_a?(Hash)
+      result = {}
+      x.each do |key, value|
+        result[key] = walk(value)
+      end
+      result
+    else
+      x
+    end
+  end
+end
+
+filter = Filter.new do |t, c|
+  if t == 'CodeBlock' && c[0].inspect =~ /diagram/
+    cache_key = Digest::SHA256.hexdigest(c.inspect)
+    cached_response = begin
+      JSON.parse(File.read("cache/#{cache_key}"))
+    rescue Errno::ENOENT
+      nil
+    end
+    if cached_response
+      cached_response
+    else
+      doc = {
+        blocks: [{ t: t, c: c }],
+        'pandoc-api-version' => [1, 17, 0, 5],
+        meta: {}
+      }
+      o, s = Open3.capture2('mermaid-filter', stdin_data: JSON.dump(doc))
+      raise unless s.success?
+      FileUtils.rm_rf('inline')
+      block = JSON.parse(o)['blocks'][0]
+      FileUtils.mkdir('cache') unless Dir.exist?('cache')
+      File.write("cache/#{cache_key}", JSON.dump(block))
+      block
+    end
+  else
+    nil
+  end
+end
+puts filter.run($stdin.read)

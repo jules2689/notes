@@ -1,0 +1,17 @@
+up:
+  - homebrew:
+      - pandoc
+      - entr
+  - ruby: 2.3.3
+  - node:
+      yarn: true
+      version: v6.10.0
+      packages: ['.util']
+
+commands:
+  build: .util/build
+  watch: |
+    trap exit INT
+    while [ 1 ]; do
+      find . -name '*.md' | entr -d -p .util/build /_
+    done

@@ -1,0 +1,13 @@
+{
+  "name": "notes",
+  "version": "0.0.1",
+  "description": "notes",
+  "repository": "https://github.com/jules2689/notes",
+  "author": "Julian Nadeau",
+  "license": "MIT",
+  "dependencies": {
+    "mermaid": "^7.0.0",
+    "mermaid-filter": "github:jules2689/mermaid-filter",
+    "phantomjs-prebuilt": "^2.1.14"
+  }
+}
