@@ -11,24 +11,21 @@
 The Path Scanner is intended to identify all files and folders within a given path that are not in the bundler path already. As a result, we can then use this result to cache path loading.
 
 
-<!---
 ```diagram
 graph TD
-  StartPoint[Starting Point]-\->Relative?
-  Relative?[is path relative?]--yes-\->Error[raise RelativePathNotSupported error]
-  Relative?--no-\->DirListing[iterator for all requirables from path]
-  DirListing--Next entry-\->StartWithBundlePath[starts with bundle path?]
-  DirListing--No next entry-\->Return[return dirs and requireables]
+  StartPoint[Starting Point]-->Relative?
+  Relative?[is path relative?]--yes-->Error[raise RelativePathNotSupported error]
+  Relative?--no-->DirListing[iterator for all requirables from path]
+  DirListing--Next entry-->StartWithBundlePath[starts with bundle path?]
+  DirListing--No next entry-->Return[return dirs and requireables]
 
 subgraph Directory Glob
-  StartWithBundlePath--yes-\->DirListing
-  StartWithBundlePath--no-\->Dir?
-  AddDir-\->DirListing
-  AddRequireable-\->DirListing
-  Dir?--yes-\->AddDir[Add to dirs]
-  Dir?--no-\->AddRequireable[Add to requireables]
+  StartWithBundlePath--yes-->DirListing
+  StartWithBundlePath--no-->Dir?
+  AddDir-->DirListing
+  AddRequireable-->DirListing
+  Dir?--yes-->AddDir[Add to dirs]
+  Dir?--no-->AddRequireable[Add to requireables]
 end
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/7fd3bd12d9e81c1c358e8ff3b7fec189.png' alt='diagram image' height='250px'>
 
