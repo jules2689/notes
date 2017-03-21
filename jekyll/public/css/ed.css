@@ -249,6 +249,11 @@ article {
   word-break: break-word;
 }
 
+/* Titles are placed above TOC, so hide the first child of article if h1 */
+article > h1:first-child {
+  display: none;
+}
+
 .hide-on-website {
   display: none;
 }

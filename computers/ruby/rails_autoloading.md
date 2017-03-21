@@ -1,3 +1,5 @@
+# Rails Autoloading
+
 Autoloading code is a mechanism in Rails that causes frameworks, classes, and code to be loaded automatically on boot. This helps productivity by allowing developers to freely use constants and classes without having to explicitly require them.
 
 An issue arises however that large amounts of code that are not needed for boot are loaded during the boot of an application, or are loaded out of order.

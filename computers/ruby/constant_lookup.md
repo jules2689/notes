@@ -1,3 +1,5 @@
+# Constant Lookup
+
 This it the flowchart that Ruby follows to look up a constant.
 The source for this flowchart was parse from the [defintion for `const_get` from Ruby 2.1.0](https://ruby-doc.org/core-2.1.0/Module.html#method-i-const_get).
 

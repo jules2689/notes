@@ -1,4 +1,4 @@
-## Caching Paths
+# Caching Paths
 
 ---
 

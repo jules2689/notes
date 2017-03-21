@@ -1,5 +1,4 @@
-Logical Clocks
----
+# Logical Clocks
 
 [This](http://web.cs.iastate.edu/~cs554/NOTES/Ch6-LogicalClocks.pdf) is a great presentation.
 
