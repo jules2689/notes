@@ -8,7 +8,7 @@
     <!-- Wrap is the content to shift when toggling the sidebar. We wrap the content to avoid any CSS collisions with our real content. -->
     <div class="wrap">
       <div class="small-wrap">
-        <div id="page-title"></div>
+        <div id="page-title">{{ page.title }}</div>
         <div class="page-toc"></div>
       </div>
 
@@ -20,8 +20,6 @@
     <script type="text/javascript">
       $( document ).ready(function() {
         $("a[href='" + window.location.pathname.replace(/\/$/, "") + "']").parentsUntil('ol.tree').children('input').attr('checked', true);
-
-        $('article > h1').detach().appendTo('#page-title');
 
         var links = $(".content h2[id!=''][id],.content h3[id!=''][id],.content h4[id!=''][id]");
         if (links.length > 2) {

@@ -11,6 +11,7 @@ github_source:       https://github.com/jules2689/notes
 
 gems:
   - jekyll-git_metadata
+  - jekyll-titles-from-headings
 
 # About/contact
 author:
