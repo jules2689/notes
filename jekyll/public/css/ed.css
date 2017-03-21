@@ -39,6 +39,13 @@ body {
   width: 100%;
 }
 
+.small-wrap {
+  width: 70%;
+  margin: 0 auto;
+  min-width: 300px;
+  margin: auto 70px;
+}
+
 .container {
   max-width: 90%;
   min-width: 300px;
