@@ -810,8 +810,15 @@ ol.bibliography {
 	text-indent: -1rem;
 }
 
+#page-title {
+  text-align: center;
+}
+
 .page-toc {
   text-align: center;
+  margin: 0 auto;
+  max-width: 90%;
+  min-width: 300px;
 }
 
 .page-toc:not(:empty) {

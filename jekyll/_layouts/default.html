@@ -16,6 +16,7 @@
         </div>
       </div>
 
+      <div id="page-title"></div>
       <div class="page-toc"></div>
 
       <div class="container content" id="main">
@@ -26,6 +27,8 @@
     <script type="text/javascript">
       $( document ).ready(function() {
         $("a[href='" + window.location.pathname.replace(/\/$/, "") + "']").parentsUntil('ol.tree').children('input').attr('checked', true);
+
+        $('article > h1').detach().appendTo('#page-title');
 
         var links = $(".content h2[id!=''][id],.content h3[id!=''][id],.content h4[id!=''][id]");
         if (links.length > 2) {
