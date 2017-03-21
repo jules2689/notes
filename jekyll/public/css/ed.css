@@ -12,7 +12,7 @@ body {
 }
 
 html {
-  font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  font-family: "Source Sans Pro", "Open Sans", "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", "Tahoma", sans-serif;
   font-size: 16px;
   line-height: 1.5;
 }
@@ -43,7 +43,7 @@ body {
   width: 70%;
   margin: 0 auto;
   min-width: 300px;
-  margin: auto 70px;
+  margin: 70px auto;
 }
 
 .container {
@@ -58,7 +58,7 @@ body {
 /* links */
 
 a, .post-title a {
-  color: #841212;
+  color: #337ab7;
   text-decoration: none;
 }
 
@@ -157,13 +157,6 @@ abbr {
 abbr[title] {
   cursor: help;
   border-bottom: 1px dotted #e5e5e5;
-}
-
-/* Search Highlihting */
-
-mark {
-    color: white;
-    background-color: #841212;
 }
 
 /* Quotes */
