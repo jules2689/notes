@@ -77,9 +77,14 @@ p {
   margin: 1em 0;
 }
 
-img {
+img:not([width]) {
   max-width: 100%;
   width: 100%;
+}
+
+img[width] {
+  padding: 20px;
+  margin: 20px;
 }
 
 h1, h2, h3, h4, h5, h6 {
