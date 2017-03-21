@@ -6,8 +6,9 @@ require 'htmlbeautifier'
 IGNORED_DIRS = %w(assets bin public)
 ALLOWED_EXTS = %w(.md .html .pdf)
 
-def directory_hash(path, name=nil)
-  data = { data: (name || path) }
+def directory_hash(path, name=nil, parent=nil)
+  id = [parent, (name || path)].compact.join('-')
+  data = { id: id, data: (name || path) }
   data[:children] = children = []
   Dir.foreach(path) do |entry|
     # Skip Hidden Files
@@ -20,7 +21,7 @@ def directory_hash(path, name=nil)
     # Actually parse the children list recursively
     full_path = File.join(path, entry)
     if File.directory?(full_path)
-      if h = directory_hash(full_path, entry)
+      if h = directory_hash(full_path, entry, id)
         children << h
       end
     else
@@ -59,8 +60,8 @@ end
 def section_title(entry, sidebar, prefix)
   if sidebar
     title = humanize(entry[:data])
-    "<label for='#{entry[:data]}'>#{title}</label>" +
-    "<input type='checkbox' id='#{entry[:data]}' />"
+    "<label for='#{entry[:id]}'>#{title}</label>" +
+    "<input type='checkbox' id='#{entry[:id]}' />"
   else
     "<p>#{humanize(entry[:data])}</p>"
   end
