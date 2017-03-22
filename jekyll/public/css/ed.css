@@ -188,7 +188,11 @@ img[width], img[height] {
   min-width: 300px;
 }
 
-img:not([width])not([height]) {
+img:not([align]) {
+  margin: 0 auto;
+}
+
+img:not([width]):not([height]) {
   display: block;
   width: 100%;
   max-width: 100%;
