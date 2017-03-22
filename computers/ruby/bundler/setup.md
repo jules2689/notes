@@ -8,6 +8,8 @@ Below are notes about how long certain parts take.
 
 If we open the `bundler/setup.rb` file up, we might notice that it is small enough to simply benchmark each line. Doing this results in the following sequence diagram:
 
+
+<!---
 ```diagram
 gantt
     title require 'bundler/setup'
@@ -24,6 +26,9 @@ gantt
     section various
     "other" :a3, 0.710, 0.711
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/ab3cdf34c521c668b44359644dcd6d8f.png' alt='diagram image' width='100%'>
+
 
 We can take note that `Bundler.setup` results in almost the entire duration of the call to `require 'bundler/setup'`. Let's dig into that more.
 
@@ -118,6 +123,8 @@ The key thing to note is that it uses CPU time and the return value is whatever 
 
 ### Results of timing
 
+
+<!---
 ```diagram
 gantt
     title Bundler.setup
@@ -137,3 +144,6 @@ gantt
     load :a4, 0.132, 0.133
     load.setup :a4, 0.133, 0.683
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/75890057a20de01f006baac5a4c816ab.png' alt='diagram image' width='100%'>
+
