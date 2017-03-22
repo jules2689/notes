@@ -27,7 +27,7 @@ gantt
     "other" :a3, 0.710, 0.711
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/ab3cdf34c521c668b44359644dcd6d8f.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/ab3cdf34c521c668b44359644dcd6d8f.png' alt='diagram image' height='400px'>
 
 
 We can take note that `Bundler.setup` results in almost the entire duration of the call to `require 'bundler/setup'`. Let's dig into that more.
@@ -145,5 +145,5 @@ gantt
     load.setup :a4, 0.133, 0.683
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/75890057a20de01f006baac5a4c816ab.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/75890057a20de01f006baac5a4c816ab.png' alt='diagram image' height='400px'>
 

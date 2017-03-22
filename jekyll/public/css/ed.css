@@ -182,13 +182,13 @@ blockquote p:last-child {
 
 /* Images */
 
-img[width] {
+img[width], img[height] {
   padding: 20px;
   margin: 20px;
   min-width: 300px;
 }
 
-img:not([width]) {
+img:not([width])not([height]) {
   display: block;
   width: 100%;
   max-width: 100%;
