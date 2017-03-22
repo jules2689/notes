@@ -4,6 +4,21 @@ Bundler setup parses through dependencies and compiles them into proper load pat
 
 Below are notes about how long certain parts take.
 
+### Timing Helper
+
+Throughtout these notes, I am using a method `_t`. This is a timing helper for scrappy timing defined as such:
+
+```ruby
+    def _t(label)
+      t = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      ret = yield
+      puts "#{label} #{Process.clock_gettime(Process::CLOCK_MONOTONIC) - t}"
+      ret
+    end
+```
+
+The key thing to note is that it uses CPU time and the return value is whatever it is from the yield. The latter point makes it easy to track things down.
+
 ## Highest Level
 
 If we open the `bundler/setup.rb` file up, we might notice that it is small enough to simply benchmark each line. Doing this results in the following sequence diagram:
@@ -106,23 +121,7 @@ else
 end
 ```
 
-### Timing Helper
-
-Note: `_t` is a timing helper for scrappy timing defined as such
-
-```ruby
-    def _t(label)
-      t = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      ret = yield
-      puts "#{label} #{Process.clock_gettime(Process::CLOCK_MONOTONIC) - t}"
-      ret
-    end
-```
-
-The key thing to note is that it uses CPU time and the return value is whatever it is from the yield. The latter point makes it easy to track things down.
-
 ### Results of timing
-
 
 <!---
 ```diagram
