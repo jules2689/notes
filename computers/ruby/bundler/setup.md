@@ -47,13 +47,13 @@ gantt
 
 We can take note that `Bundler.setup` results in almost the entire duration of the call to `require 'bundler/setup'`. Let's dig into that more.
 
-## `Bundler.setup`
+## Bundler.setup
 
 The call to `Bundler.setup` is a little bit ambiguous due to parameters, but checking the `source_location` at runtime results in `setup` at line 90 of `lib/bundler.rb`.
 This was what I originally thought, but it it good to check.
 
 ```ruby
-$ Bundler.method(:setup).source_location
+Bundler.method(:setup).source_location
 ["/Users/juliannadeau/.gem/ruby/2.3.3/gems/bundler-1.14.5/lib/bundler.rb", 90]
 ```
 
@@ -146,3 +146,6 @@ gantt
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/75890057a20de01f006baac5a4c816ab.png' alt='diagram image' height='400px'>
 
+It is painfully obvious that we spend a lot of time in 2 spots. About 1/3 of the time is spent in `definition`, and the other 2/3 is spent in `load.setup` (specifically the `setup` call). We'll dig into both of these separately.
+
+## description
