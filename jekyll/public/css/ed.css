@@ -190,6 +190,7 @@ img[width], img[height] {
 
 img:not([align]) {
   margin: 0 auto;
+  display: block;
 }
 
 img:not([width]):not([height]) {
