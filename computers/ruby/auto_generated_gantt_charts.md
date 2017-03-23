@@ -101,7 +101,7 @@ gantt
    @setup = load.setup :a1, 0.231, 1.312
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/bcb7e32836723333af7bbeb2974a52e6.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/bundler_setup.png' alt='diagram image' width='100%'>
 
 
 We can now dig deeper into the lines `definition.validate_runtime!` and `@setup = load.setup` as they take the most time.
