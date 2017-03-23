@@ -1,6 +1,6 @@
 # Auto-generating Gantt charts for a method
 
-While working on timing the performance of Bundler, I noticed that Gantt charts are an effective way to visualize slowness. Working off of this theory, I automated the generation of the charts using [Mermaid](http://knsv.github.io/mermaid/index.html).
+While working on timing the performance of Bundler, I noticed that Gantt charts are an effective way to visualize slowness. Working off of this theory, I automated the generation of the charts using [Mermaid](http://knsv.github.io/mermaid/index.html). The resulting chart data can be plugged into [this online editor](http://knsv.github.io/mermaid/live_editor/), or you can generate it using the Mermaid library yourself.
 
 ```ruby
  def gantt_chart
