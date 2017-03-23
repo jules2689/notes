@@ -87,6 +87,8 @@ end
 
 and this chart:
 
+
+<!---
 ```diagram
 gantt
    title file: /Users/juliannadeau/.gem/ruby/2.3.3/gems/bundler-1.14.5/lib/bundler.rb method: setup
@@ -98,5 +100,8 @@ gantt
    if groups.empty? :a1, 0.230, 0.231
    @setup = load.setup :a1, 0.231, 1.312
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/bcb7e32836723333af7bbeb2974a52e6.png' alt='diagram image' width='100%'>
+
 
 We can now dig deeper into the lines `definition.validate_runtime!` and `@setup = load.setup` as they take the most time.
