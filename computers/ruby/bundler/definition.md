@@ -215,3 +215,12 @@ gantt
 
 It is very obvious to see that this particular line `locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times) :a1, 0.001, 0.182` is the root cause of the slowness.
 Run 112-113K times for the Shopify application, it is slow and could likely benefit from some up front hashing.
+
+---
+
+Actions
+---
+ 
+- Convert @locked_deps to hash, see if that improves things with `O(1)` access instead
+- Can `parse_source` in the lockfile parse be faster?
+- Look at caching the evaled gemfile
