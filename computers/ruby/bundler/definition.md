@@ -84,7 +84,6 @@ gantt
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/9a323efe751f19d3f0e6b0a4664dcc77.png' alt='diagram image' height='400px'>
 
 
-
 We can see that the time is split between `eval_gemfile` and `to_definition`.
 
 ---
@@ -108,7 +107,7 @@ gantt
    @gemfile = original_gemfile :a1, 0.058, 0.059
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8442a36a5b4f4f43b6a2bddecca3dca7.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8442a36a5b4f4f43b6a2bddecca3dca7.png' alt='diagram image' height='500px'>
 
 We can see here that when we take the contents of the bundler file, and `instance_eval` it, we'll spend about 55ms doing that.
 Without a refactor, we likely cannot get away from this.
