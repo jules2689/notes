@@ -1,16 +1,21 @@
 # bundler/definition.rb
 
+
+<!---
 ```diagram
 graph LR
-   Bundler#definition[Bundler#definition => 226ms]-->Definition.build[Definition.build => 220ms]
-   Definition.build-->Dsl#evaluate[Dsl#evaluate => 211ms]
-   Dsl#evaluate-->builder.eval_gemfile[builder.eval_gemfile => 55ms]
-   Dsl#evaluate-->Definition#new[builder.to_definition -> Definition#new => 130ms]
-   Definition#new-->LockfileParser.new[LockfileParser#new => 48ms]
-   Definition#new-->definition#converge_dependencies[definition#converge_dependencies => 68ms]
-   definition#converge_dependencies-->locked_deps.select[locked_deps.select => 113K calls => 58ms]
-   LockfileParser.new-->lockfile_parser#parse_state[lockfile_parser#parse_'state' => 1370 calls => 26ms]
+   Bundler#definition[Bundler#definition => 226ms]-\->Definition.build[Definition.build => 220ms]
+   Definition.build-\->Dsl#evaluate[Dsl#evaluate => 211ms]
+   Dsl#evaluate-\->builder.eval_gemfile[builder.eval_gemfile => 55ms]
+   Dsl#evaluate-\->Definition#new[builder.to_definition -> Definition#new => 130ms]
+   Definition#new-\->LockfileParser.new[LockfileParser#new => 48ms]
+   Definition#new-\->definition#converge_dependencies[definition#converge_dependencies => 68ms]
+   definition#converge_dependencies-\->locked_deps.select[locked_deps.select => 113K calls => 58ms]
+   LockfileParser.new-\->lockfile_parser#parse_state[lockfile_parser#parse_'state' => 1370 calls => 26ms]
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/48a8c1c99decb9d1e8f78d7bf1860e48.png' alt='diagram image' width='100%'>
+
 
 ---
 
@@ -78,6 +83,8 @@ We can see that the time is split between `eval_gemfile` and `to_definition`.
 builder.eval_gemfile
 ---
 
+
+<!---
 ```diagram
 gantt
    title lib/bundler/dsl.rb#eval_gemfile
@@ -91,6 +98,9 @@ gantt
    instance_eval :a1, 0.005, 0.058
    @gemfile = original_gemfile :a1, 0.058, 0.059
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8442a36a5b4f4f43b6a2bddecca3dca7.png' alt='diagram image' width='100%'>
+
 
 
 
