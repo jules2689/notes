@@ -1,7 +1,6 @@
 # bundler/definition.rb
 
 
-<!---
 ```diagram
 gantt
    title file: gems/bundler-1.14.5/lib/bundler.rb method: definition
@@ -12,8 +11,6 @@ gantt
    configure :a1, 0.002, 0.016
    Definition.build(default_gemfile, default_lockfile, unlock) :a1, 0.016, 0.226
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/23b676377c99e839cbedb08ef02c2580.png' alt='diagram image' width='100%'>
 
 
 As we can see, `Definition.build` take a long time to process.
@@ -21,10 +18,9 @@ As we can see, `Definition.build` take a long time to process.
 ## Definition.build
 
 
-<!---
 ```diagram
 gantt
-   title file: gems/bundler-1.14.6/lib/bundler/definition.rb method: build
+   title lib/bundler/definition.rb#build
    dateFormat  s.SSS
 
    unlock ||= {} :a1, 0.000, 0.001
@@ -32,8 +28,6 @@ gantt
    raise GemfileNotFound :a1, 0.002, 0.003
    Dsl.evaluate(gemfile, lockfile, unlock) :a1, 0.003, 0.214
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/e4d7ef684090c43d8960c10e1b690f6f.png' alt='diagram image' width='100%'>
 
 
 From here we can see `Dsl.evaluate` takes the most time
@@ -41,18 +35,15 @@ From here we can see `Dsl.evaluate` takes the most time
 ## Dsl.evaluate
 
 
-<!---
 ```diagram
 gantt
-   title file: gems/bundler-1.14.6/lib/bundler/dsl.rb method: evaluate
+   title lib/bundler/dsl.rb#evaluate
    dateFormat  s.SSS
 
    builder = new :a1, 0.000, 0.001
    builder.eval_gemfile(gemfile) :a1, 0.001, 0.056
    builder.to_definition(lockfile, unlock) :a1, 0.056, 0.185
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/7e5efe13cab65c10b7a8a1c1995459fc.png' alt='diagram image' width='100%'>
 
 
 We can see that the time is split between `eval_gemfile` and `to_definition`.
@@ -60,10 +51,9 @@ We can see that the time is split between `eval_gemfile` and `to_definition`.
 ## builder.eval_gemfile
 
 
-<!---
 ```diagram
 gantt
-   title file: gems/bundler-1.14.6/lib/bundler/dsl.rb method: eval_gemfile
+   title lib/bundler/dsl.rb#eval_gemfile
    dateFormat  s.SSS
 
    begin :a1, 0.000, 0.001
@@ -74,8 +64,6 @@ gantt
    instance_eval(contents.dup.untaint, gemfile.to_s, 1) :a1, 0.005, 0.058
    @gemfile = original_gemfile :a1, 0.058, 0.059
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/3d65615e22385366668bcf0cb1288cb1.png' alt='diagram image' width='100%'>
 
 
 We can see here that when we take the contents of the bundler file, and `instance_eval` it, we'll spend about 55ms doing that.
@@ -85,13 +73,11 @@ Without a refactor, we likely cannot get away from this.
 
 This method simply calls `Definition.new`, so we'll move to that instead.
 
-## Definition.new
+### Definition.new
 
-
-<!---
 ```diagram
 gantt
-   title file: gems/bundler-1.14.6/lib/bundler/definition.rb method: initialize
+   title lib/bundler/definition.rb#initialize
    dateFormat  s.SSS
 
    @unlocking = unlock == true || !unlock.empty? :a1, 0.000, 0.001
@@ -134,8 +120,6 @@ gantt
    @requires = compute_requires :a1, 0.182, 0.183
    fixup_dependency_types! :a1, 0.183, 0.194
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/d36a94d33584161e06ac5b8cb6d53423.png' alt='diagram image' width='100%'>
 
 
 Some lines that pop out are as follows:
@@ -148,17 +132,15 @@ Some lines that pop out are as follows:
 | `@dependency_changes = converge_dependencies :a1, 0.113, 0.181` | 68 ms |
 | `fixup_dependency_types! :a1, 0.183, 0.194` | 11 ms |
 
-### LockfileParser.new
+#### LockfileParser.new
 
 See [lockfile_parser](../lockfile_parser)
 
-### definition#coverge_dependencies
+#### definition#coverge_dependencies
 
-
-<!---
 ```diagram
 gantt
-   title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
+   title bundler/definition.rb#converge_dependencies
    dateFormat  s.SSS
 
    "(@dependencies + @locked_deps).each do |dep|" :a1, 0.000, 0.001
@@ -170,10 +152,6 @@ gantt
    "dependency_without_type = proc {|d| Gem::Dependency.new(d.name *d.requirement.as_list) } (run 475 times)" :a1, 0.198, 0.214
    "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.map(&dependency_without_type))" :a1, 0.214, 0.215
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/247173c4ac504e0ce4a1beffa5f8d188.png' alt='diagram image' width='100%'>
-
 
 It is very obvious to see that this particular line `locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times) :a1, 0.001, 0.182` is the root cause of the slowness.
 Run 112-113K times for the Shopify application, it is slow and could likely benefit from some up front hashing.
-
