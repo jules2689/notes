@@ -13,7 +13,7 @@ gantt
    Definition.build(default_gemfile, default_lockfile, unlock) :a1, 0.016, 0.226
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/23b676377c99e839cbedb08ef02c2580.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/23b676377c99e839cbedb08ef02c2580.png' alt='diagram image' height='400px'>
 
 
 As we can see, `Definition.build` take a long time to process.
@@ -35,7 +35,7 @@ gantt
    Dsl.evaluate(gemfile, lockfile, unlock) :a1, 0.003, 0.214
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8e82477f959f767a7fd4cf8c58b1f5fb.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8e82477f959f767a7fd4cf8c58b1f5fb.png' alt='diagram image' height='400px'>
 
 
 
@@ -57,7 +57,7 @@ gantt
    builder.to_definition(lockfile, unlock) :a1, 0.056, 0.185
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/9a323efe751f19d3f0e6b0a4664dcc77.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/9a323efe751f19d3f0e6b0a4664dcc77.png' alt='diagram image' height='400px'>
 
 
 
@@ -83,7 +83,7 @@ gantt
    @gemfile = original_gemfile :a1, 0.058, 0.059
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/f094577994ddf6eaf7d8fd4830e314af.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/f094577994ddf6eaf7d8fd4830e314af.png' alt='diagram image' height='400px'>
 
 
 
@@ -148,7 +148,7 @@ gantt
    fixup_dependency_types! :a1, 0.183, 0.194
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/b09f829c9ab8241be0bf624e1fccb56e.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/b09f829c9ab8241be0bf624e1fccb56e.png' alt='diagram image' height='1000px'>
 
 
 
@@ -189,7 +189,7 @@ gantt
    "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.map(&dependency_without_type))" :a1, 0.214, 0.215
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/6e16e312d0841cc8d91df0ed7768669a.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/6e16e312d0841cc8d91df0ed7768669a.png' alt='diagram image' height='500px'>
 
 
 It is very obvious to see that this particular line `locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times) :a1, 0.001, 0.182` is the root cause of the slowness.
