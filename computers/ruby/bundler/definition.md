@@ -1,6 +1,5 @@
 # bundler/definition.rb
 
-
 ```diagram
 gantt
    title file: gems/bundler-1.14.5/lib/bundler.rb method: definition
@@ -12,11 +11,11 @@ gantt
    Definition.build(default_gemfile, default_lockfile, unlock) :a1, 0.016, 0.226
 ```
 
-
 As we can see, `Definition.build` take a long time to process.
 
-## Definition.build
+---
 
+## Definition.build
 
 ```diagram
 gantt
@@ -32,8 +31,9 @@ gantt
 
 From here we can see `Dsl.evaluate` takes the most time
 
-## Dsl.evaluate
+---
 
+## Dsl.evaluate
 
 ```diagram
 gantt
@@ -48,8 +48,9 @@ gantt
 
 We can see that the time is split between `eval_gemfile` and `to_definition`.
 
-## builder.eval_gemfile
+---
 
+## builder.eval_gemfile
 
 ```diagram
 gantt
@@ -69,9 +70,13 @@ gantt
 We can see here that when we take the contents of the bundler file, and `instance_eval` it, we'll spend about 55ms doing that.
 Without a refactor, we likely cannot get away from this.
 
+---
+
 ## builder.to_definition
 
 This method simply calls `Definition.new`, so we'll move to that instead.
+
+---
 
 ### Definition.new
 
@@ -132,9 +137,13 @@ Some lines that pop out are as follows:
 | `@dependency_changes = converge_dependencies :a1, 0.113, 0.181` | 68 ms |
 | `fixup_dependency_types! :a1, 0.183, 0.194` | 11 ms |
 
+---
+
 #### LockfileParser.new
 
 See [lockfile_parser](../lockfile_parser)
+
+---
 
 #### definition#coverge_dependencies
 
