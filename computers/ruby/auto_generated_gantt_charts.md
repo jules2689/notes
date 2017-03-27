@@ -4,6 +4,8 @@ While working on timing the performance of Bundler, I noticed that Gantt charts 
 
 ```ruby
  def gantt_chart
+  ret = nil
+
   # Determine the method and path that we're calling from
   call_loc = caller_locations.reject { |l| l.path.include?('byebug') }.first
   method_name = call_loc.label
@@ -18,7 +20,7 @@ While working on timing the performance of Bundler, I noticed that Gantt charts 
   finalize_time = -> () do
     if last = @timed.pop
       # Finalize the time
-      time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - last[:start] 
+      time = Process.clock_gettime(Process::CLOCK_MONOTONIC) - last[:start]
       # Get the source line from the line number
       line = source[last[:line_no] - 1].strip
       @timed << { line_no: last[:line_no], line: line, time: time }
@@ -39,7 +41,7 @@ While working on timing the performance of Bundler, I noticed that Gantt charts 
 
   begin
     trace.enable
-    yield
+    ret = yield
   ensure
     # At this point we are done the method, but one more time needs to be finalized
     finalize_time.call
@@ -47,41 +49,33 @@ While working on timing the performance of Bundler, I noticed that Gantt charts 
   end
 
   # Output mermaid syntax for gantt
+  title_file = path.gsub(ENV['GEM_HOME'], '').gsub(ENV['HOME'], '')
   puts "gantt"
-  puts "   title file: #{path} method: #{method_name}"
+  puts "   title file: #{title_file} method: #{method_name}"
   puts "   dateFormat  s.SSS\n\n"
 
-  @timed.each_with_object(0.000) do |timed_line, curr_time|
-    time = timed_line[:time] < 0.001 ? 0.001 : timed_line[:time]
+  curr_time = 0.000
+
+  # Aggregate the lines together. Loops can cause things to become unweildly otherwise
+  @grouped_lines = @timed.group_by { |line| [line[:line], line[:line_no]] }
+
+  @grouped_lines.each do |(group_name, line_no), group|
+    # If we have run more than once, we should indicate how many times something is called
+    entry_name = group.size > 1 ? "#{group_name} (run #{group.size} times)" : group_name
+    entry_name = entry_name.tr('"', "'").tr(",", ' ') # Mermaid has trouble with these
+
+    # Total time for all entries to run
+    total_time = group.collect { |e| e[:time] }.inject(:+)
+    time = total_time < 0.001 ? 0.001 : total_time
+
+    # Output the line
     post_time = time + curr_time
-    puts "   #{timed_line[:line]} :a1, #{"%.3f" % curr_time}, #{"%.3f" % post_time}"
+    puts format("   \"#{entry_name}\" :a1, %.3f, %.3f", curr_time, post_time)
     curr_time = post_time
   end
 
   puts "\n\n"
-end
-```
-
-## Usage
-
-Running this on `Bundler`'s `lib/bundler.rb`'s `setup` method, we get this source code:
-
-```ruby
-def setup(*groups)
-  gantt_chart do
-    # Return if all groups are already loaded
-    return @setup if defined?(@setup) && @setup
-
-    definition.validate_runtime!
-    SharedHelpers.print_major_deprecations!
-
-    if groups.empty?
-      # Load all groups, but only once
-      @setup = load.setup
-    else
-      load.setup(*groups)
-    end
-  end
+  ret
 end
 ```
 
