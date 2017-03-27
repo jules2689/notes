@@ -71,6 +71,8 @@ By the diagram below, we can see the following from our case statement:
 | parse_bundled_with | 1 time | 1 ms | - |
 
 
+
+<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: initialize
@@ -105,3 +107,6 @@ gantt
    "@specs = @specs.values.sort_by(&:identifier)" :a1, 0.082, 0.093
    "warn_for_outdated_bundler_version" :a1, 0.093, 0.094
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/b23337a3a983b311ac0d2c34e6f2663d.png' alt='diagram image' width='100%'>
+
