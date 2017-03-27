@@ -39,6 +39,8 @@ gantt
 
 As we can see, `Definition.build` take a long time to process.
 
+---
+
 Definition.build
 ---
 
@@ -60,6 +62,8 @@ gantt
 
 From here we can see `Dsl.evaluate` takes the most time
 
+---
+
 Dsl.evaluate
 ---
 
@@ -79,6 +83,8 @@ gantt
 
 
 We can see that the time is split between `eval_gemfile` and `to_definition`.
+
+---
 
 builder.eval_gemfile
 ---
@@ -101,16 +107,17 @@ gantt
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8442a36a5b4f4f43b6a2bddecca3dca7.png' alt='diagram image' width='100%'>
 
-
-
-
 We can see here that when we take the contents of the bundler file, and `instance_eval` it, we'll spend about 55ms doing that.
 Without a refactor, we likely cannot get away from this.
+
+---
 
 builder.to_definition
 ---
 
 This method simply calls `Definition.new`, so we'll move to that instead.
+
+---
 
 Definition.new
 ---
@@ -174,10 +181,14 @@ Some lines that pop out are as follows:
 | `@dependency_changes = converge_dependencies :a1, 0.113, 0.181` | 68 ms |
 | `fixup_dependency_types! :a1, 0.183, 0.194` | 11 ms |
 
+---
+
 LockfileParser.new
 ---
 
 See [lockfile_parser](../lockfile_parser)
+
+---
 
 definition#coverge_dependencies
 ---
@@ -199,7 +210,6 @@ gantt
 ```
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/6e16e312d0841cc8d91df0ed7768669a.png' alt='diagram image' height='500px'>
-
 
 It is very obvious to see that this particular line `locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times) :a1, 0.001, 0.182` is the root cause of the slowness.
 Run 112-113K times for the Shopify application, it is slow and could likely benefit from some up front hashing.
