@@ -1,5 +1,7 @@
 # bundler/definition.rb
 
+
+<!---
 ```diagram
 gantt
    title file: gems/bundler-1.14.5/lib/bundler.rb method: definition
@@ -10,6 +12,9 @@ gantt
    configure :a1, 0.002, 0.016
    Definition.build(default_gemfile, default_lockfile, unlock) :a1, 0.016, 0.226
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/23b676377c99e839cbedb08ef02c2580.png' alt='diagram image' width='100%'>
+
 
 As we can see, `Definition.build` take a long time to process.
 
@@ -17,6 +22,8 @@ As we can see, `Definition.build` take a long time to process.
 
 ## Definition.build
 
+
+<!---
 ```diagram
 gantt
    title lib/bundler/definition.rb#build
@@ -27,6 +34,9 @@ gantt
    raise GemfileNotFound :a1, 0.002, 0.003
    Dsl.evaluate(gemfile, lockfile, unlock) :a1, 0.003, 0.214
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8e82477f959f767a7fd4cf8c58b1f5fb.png' alt='diagram image' width='100%'>
+
 
 
 From here we can see `Dsl.evaluate` takes the most time
@@ -35,6 +45,8 @@ From here we can see `Dsl.evaluate` takes the most time
 
 ## Dsl.evaluate
 
+
+<!---
 ```diagram
 gantt
    title lib/bundler/dsl.rb#evaluate
@@ -44,6 +56,9 @@ gantt
    builder.eval_gemfile(gemfile) :a1, 0.001, 0.056
    builder.to_definition(lockfile, unlock) :a1, 0.056, 0.185
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/9a323efe751f19d3f0e6b0a4664dcc77.png' alt='diagram image' width='100%'>
+
 
 
 We can see that the time is split between `eval_gemfile` and `to_definition`.
@@ -52,6 +67,8 @@ We can see that the time is split between `eval_gemfile` and `to_definition`.
 
 ## builder.eval_gemfile
 
+
+<!---
 ```diagram
 gantt
    title lib/bundler/dsl.rb#eval_gemfile
@@ -65,6 +82,9 @@ gantt
    instance_eval(contents.dup.untaint, gemfile.to_s, 1) :a1, 0.005, 0.058
    @gemfile = original_gemfile :a1, 0.058, 0.059
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/f094577994ddf6eaf7d8fd4830e314af.png' alt='diagram image' width='100%'>
+
 
 
 We can see here that when we take the contents of the bundler file, and `instance_eval` it, we'll spend about 55ms doing that.
@@ -80,6 +100,8 @@ This method simply calls `Definition.new`, so we'll move to that instead.
 
 ### Definition.new
 
+
+<!---
 ```diagram
 gantt
    title lib/bundler/definition.rb#initialize
@@ -125,6 +147,9 @@ gantt
    @requires = compute_requires :a1, 0.182, 0.183
    fixup_dependency_types! :a1, 0.183, 0.194
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/b09f829c9ab8241be0bf624e1fccb56e.png' alt='diagram image' width='100%'>
+
 
 
 Some lines that pop out are as follows:
@@ -147,6 +172,8 @@ See [lockfile_parser](../lockfile_parser)
 
 #### definition#coverge_dependencies
 
+
+<!---
 ```diagram
 gantt
    title bundler/definition.rb#converge_dependencies
@@ -161,6 +188,9 @@ gantt
    "dependency_without_type = proc {|d| Gem::Dependency.new(d.name *d.requirement.as_list) } (run 475 times)" :a1, 0.198, 0.214
    "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.map(&dependency_without_type))" :a1, 0.214, 0.215
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/6e16e312d0841cc8d91df0ed7768669a.png' alt='diagram image' width='100%'>
+
 
 It is very obvious to see that this particular line `locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times) :a1, 0.001, 0.182` is the root cause of the slowness.
 Run 112-113K times for the Shopify application, it is slow and could likely benefit from some up front hashing.
