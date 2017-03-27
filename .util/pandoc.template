@@ -77,9 +77,17 @@ p {
   margin: 1em 0;
 }
 
-img:not([width]) {
-  max-width: 100%;
-  width: 100%;
+img:not([height]) {
+  height: 400px;
+  width: auto;
+  margin: 0 auto;
+  display: block;
+}
+
+img[height] {
+  width: auto;
+  margin: 0 auto;
+  display: block;
 }
 
 img[width] {

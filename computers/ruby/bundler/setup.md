@@ -129,9 +129,9 @@ gantt
     title Bundler.setup
     dateFormat  s.SSS
 
-    section description
+    section definition
     initialize :a1, 0.000, 0.129
-    description.validate_runtime! :a1, 0.129, 0.130
+    definition.validate_runtime! :a1, 0.129, 0.130
 
     section SharedHelpers
     print_major_deprecations! :a2, 0.130, 0.131
@@ -148,4 +148,9 @@ gantt
 
 It is painfully obvious that we spend a lot of time in 2 spots. About 1/3 of the time is spent in `definition`, and the other 2/3 is spent in `load.setup` (specifically the `setup` call). We'll dig into both of these separately.
 
-## description
+---
+
+To continue this path:
+
+- [definition](../definition)
+- [load](../load)
