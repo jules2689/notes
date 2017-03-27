@@ -67,23 +67,19 @@ We can see that the time is split between `eval_gemfile` and `to_definition`.
 
 ## builder.eval_gemfile
 
-
-<!---
 ```diagram
 gantt
    title lib/bundler/dsl.rb#eval_gemfile
    dateFormat  s.SSS
 
    begin :a1, 0.000, 0.001
-   expanded_gemfile_path = Pathname.new(gemfile).expand_path :a1, 0.001, 0.002
+   expanded_gemfile_path = ... :a1, 0.001, 0.002
    original_gemfile = @gemfile :a1, 0.002, 0.003
    @gemfile = expanded_gemfile_path :a1, 0.003, 0.004
    contents ||= Bundler.read_file(gemfile.to_s) :a1, 0.004, 0.005
-   instance_eval(contents.dup.untaint, gemfile.to_s, 1) :a1, 0.005, 0.058
+   instance_eval :a1, 0.005, 0.058
    @gemfile = original_gemfile :a1, 0.058, 0.059
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/f094577994ddf6eaf7d8fd4830e314af.png' alt='diagram image' height='400px'>
 
 
 
