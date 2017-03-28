@@ -32,8 +32,7 @@ gantt
    "warn_for_outdated_bundler_version" :a1, 0.090, 0.091
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/2815979f5faca9ffb7d6b284db8d7dc5.png' alt='diagram image' width='100%'>
-
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.50.46 PM.png' alt='diagram image' width='100%'>
 
 Here, we see that `parse_#{@state}` is the bulk of the work. This is a dynamic call to parse methods... is any one of them slower than another?
 
@@ -69,7 +68,6 @@ By the diagram below, we can see the following from our case statement:
 | parse_platform | 1 time | 1 ms | - |
 | parse_dependency | 237 times | 15 ms | - |
 | parse_bundled_with | 1 time | 1 ms | - |
-
 
 <!---
 ```diagram
@@ -107,13 +105,12 @@ gantt
    "warn_for_outdated_bundler_version" :a1, 0.093, 0.094
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/b23337a3a983b311ac0d2c34e6f2663d.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.46.45 PM.png' alt='diagram image' width='100%'>
 
 ---
 
-parse_state
+parse_source
 ---
-
 
 <!---
 ```diagram
@@ -141,8 +138,7 @@ gantt
    "@current_source = @rubygems_aggregate" :a1, 0.059, 0.060
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/3da2e08ca9de69d7807f16e8c3286a32.png' alt='diagram image' width='100%'>
-
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.47.00 PM.png' alt='diagram image' width='100%'>
 
 `parse_spec` is the obvious bulk of this method, so let's also look there.
 
@@ -202,7 +198,6 @@ So what does this actually do? Seems it resolves specifications from the lockfil
 
 ## NAME_VERSION_4
 
-
 <!---
 ```diagram
 gantt
@@ -218,13 +213,11 @@ gantt
    "@current_spec.source = @current_source (run 374 times)" :a1, 0.007, 0.064
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/dc9ea02160e78f74261ecec08f2c82b8.png' alt='diagram image' width='100%'>
-
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.47.20 PM.png' alt='diagram image' width='100%'>
 
 `"@current_spec.source = @current_source (run 374 times)" :a1, 0.007, 0.064` is an obvious outlier. We'll look into that more in a moment.
 
 ## NAME_VERSION_6
-
 
 <!---
 ```diagram
@@ -240,7 +233,6 @@ gantt
    "@specs[@current_spec.identifier] ||= @current_spec (run 480 times)" :a1, 0.015, 0.068
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/5cceb73c846e4f2dd11005654ca51c09.png' alt='diagram image' width='100%'>
-
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.47.09 PM.png' alt='diagram image' width='100%'>
 
 First, I find it interesting that `Gem::Dependency.new(name, version) (run 480 times)` takes 11ms. But more so, the 50ms spend on `@specs[@current_spec.identifier] ||= @current_spec` is interesting.
