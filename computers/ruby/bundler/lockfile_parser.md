@@ -218,6 +218,6 @@ gantt
    "@specs[@current_spec.identifier] ||= @current_spec" :a1, 0.035, 0.036
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 6.33.13 PM.pn' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 6.33.13 PM.png' alt='diagram image' width='100%'>
 
 We can see that `"dep = GemDependency.new(name  version) (run 480 times)" :a1, 0.021, 0.035` takes a check of time, otherwise there's not much bulk here.
