@@ -196,43 +196,28 @@ So, what is the difference between these two? Well NAME_VERSION_4 is a top level
 
 So what does this actually do? Seems it resolves specifications from the lockfile. The "4 space" (NAME VERSION 4) seems to also load a current spec, which I don't quite get. Seems we re-assign this class level variable a lot to avoid passing it around.
 
-## NAME_VERSION_4
-
-<!---
+<!--
 ```diagram
 gantt
-   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: name_version_four
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: parse_spec
    dateFormat  s.SSS
 
-   "name = $1 (run 374 times)" :a1, 0.000, 0.001
-   "version = $2 (run 374 times)" :a1, 0.001, 0.002
-   "platform = $3 (run 374 times)" :a1, 0.002, 0.003
-   "version = Gem::Version.new(version) (run 374 times)" :a1, 0.003, 0.004
-   "platform = platform ? Gem::Platform.new(platform) : Gem::Platform::RUBY (run 374 times)" :a1, 0.004, 0.005
-   "@current_spec = LazySpecification.new(name  version  platform) (run 374 times)" :a1, 0.005, 0.007
-   "@current_spec.source = @current_source (run 374 times)" :a1, 0.007, 0.064
+   "if line =~ NAME_VERSION_4 (run 854 times)" :a1, 0.000, 0.004
+   "name = $1 (run 374 times)" :a1, 0.004, 0.005
+   "version = $2 (run 374 times)" :a1, 0.005, 0.006
+   "platform = $3 (run 374 times)" :a1, 0.006, 0.007
+   "version = Gem::Version.new(version) (run 374 times)" :a1, 0.007, 0.009
+   "platform = platform ? Gem::Platform.new(platform) : Gem::Platform::RUBY (run 374 times)" :a1, 0.009, 0.010
+   "@current_spec = LazySpecification.new(name  version  platform) (run 374 times)" :a1, 0.010, 0.013
+   "@current_spec.source = @current_source (run 374 times)" :a1, 0.013, 0.014
+   "elsif line =~ NAME_VERSION_6 (run 480 times)" :a1, 0.014, 0.016
+   "name = $1 (run 480 times)" :a1, 0.016, 0.018
+   "version = $2 (run 480 times)" :a1, 0.018, 0.019
+   "version = version.split(' ').map(&:strip) if version (run 480 times)" :a1, 0.019, 0.021
+   "dep = Gem::Dependency.new(name  version) (run 480 times)" :a1, 0.021, 0.035
+   "@specs[@current_spec.identifier] ||= @current_spec" :a1, 0.035, 0.036
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.47.20 PM.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 6.33.13 PM.pn' alt='diagram image' width='100%'>
 
-`"@current_spec.source = @current_source (run 374 times)" :a1, 0.007, 0.064` is an obvious outlier. We'll look into that more in a moment.
-
-## NAME_VERSION_6
-
-<!---
-```diagram
-gantt
-   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: name_version_six
-   dateFormat  s.SSS
-
-   "name = $1 (run 480 times)" :a1, 0.000, 0.001
-   "version = $2 (run 480 times)" :a1, 0.001, 0.002
-   "version = version.split(' ').map(&:strip) if version (run 480 times)" :a1, 0.002, 0.003
-   "dep = Gem::Dependency.new(name  version) (run 480 times)" :a1, 0.003, 0.014
-   "@current_spec.dependencies << dep (run 480 times)" :a1, 0.014, 0.015
-   "@specs[@current_spec.identifier] ||= @current_spec (run 480 times)" :a1, 0.015, 0.068
-```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.47.09 PM.png' alt='diagram image' width='100%'>
-
-First, I find it interesting that `Gem::Dependency.new(name, version) (run 480 times)` takes 11ms. But more so, the 50ms spend on `@specs[@current_spec.identifier] ||= @current_spec` is interesting.
+We can see that `"dep = GemDependency.new(name  version) (run 480 times)" :a1, 0.021, 0.035` takes a check of time, otherwise there's not much bulk here.
