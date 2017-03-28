@@ -1,6 +1,8 @@
 # bundler/lockfile_parser.rb
 
 
+
+<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: initialize
@@ -31,6 +33,9 @@ gantt
    "@specs = @specs.values.sort_by(&:identifier)" :a1, 0.081, 0.090
    "warn_for_outdated_bundler_version" :a1, 0.090, 0.091
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/2815979f5faca9ffb7d6b284db8d7dc5.png' alt='diagram image' width='100%'>
+
 
 Here, we see that `parse_#{@state}` is the bulk of the work. This is a dynamic call to parse methods... is any one of them slower than another?
 
@@ -69,6 +74,8 @@ By the diagram below, we can see the following from our case statement:
 
 
 
+
+<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: initialize
@@ -103,3 +110,6 @@ gantt
    "@specs = @specs.values.sort_by(&:identifier)" :a1, 0.082, 0.093
    "warn_for_outdated_bundler_version" :a1, 0.093, 0.094
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/b23337a3a983b311ac0d2c34e6f2663d.png' alt='diagram image' width='100%'>
+
