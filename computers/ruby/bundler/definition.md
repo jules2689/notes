@@ -1,26 +1,33 @@
 # bundler/definition.rb
 
+
+<!---
 ```diagram
 graph LR
-   Bundler#definition[Bundler#definition => 226ms]-->Definition.build[Definition.build => 220ms]
-   Definition.build-->Dsl#evaluate[Dsl#evaluate => 211ms]
-   Dsl#evaluate-->builder.eval_gemfile[builder.eval_gemfile => 55ms]
-   Dsl#evaluate-->Definition#new[builder.to_definition -> Definition#new => 130ms]
-   Definition#new-->LockfileParser.new[LockfileParser#new => 48ms]
-   Definition#new-->definition#converge_dependencies[definition#converge_dependencies => 68ms]
-   definition#converge_dependencies-->locked_deps.select[locked_deps.select => 113K calls => 58ms]
-   LockfileParser.new-->lockfile_parser#parse_state[lockfile_parser#parse_'state' => 1370 calls => 26ms]
-   lockfile_parser#parse_state-->lockfile_parser#parse_source[lockfile_parser#parse_source => 1131 times => 22ms]
-   lockfile_parser#parse_state-->lockfile_parser#parse_platform[lockfile_parser#parse_platform => 1 times => <1ms]
-   lockfile_parser#parse_state-->lockfile_parser#parse_dependency[lockfile_parser#parse_dependency => 237 times => 5ms]
-   lockfile_parser#parse_state-->lockfile_parser#parse_bundled_with[lockfile_parser#parse_bundled_with => 1 time => <1 ms]
+   Bundler#definition[Bundler#definition => 226ms]-\->Definition.build[Definition.build => 220ms]
+   Definition.build-\->Dsl#evaluate[Dsl#evaluate => 211ms]
+   Dsl#evaluate-\->builder.eval_gemfile[builder.eval_gemfile => 55ms]
+   Dsl#evaluate-\->Definition#new[builder.to_definition -> Definition#new => 130ms]
+   Definition#new-\->LockfileParser.new[LockfileParser#new => 48ms]
+   Definition#new-\->definition#converge_dependencies[definition#converge_dependencies => 68ms]
+   definition#converge_dependencies-\->locked_deps.select[locked_deps.select => 113K calls => 58ms]
+   LockfileParser.new-\->lockfile_parser#parse_state[lockfile_parser#parse_'state' => 1370 calls => 26ms]
+   lockfile_parser#parse_state-\->lockfile_parser#parse_source[lockfile_parser#parse_source => 1131 times => 22ms]
+   lockfile_parser#parse_state-\->lockfile_parser#parse_platform[lockfile_parser#parse_platform => 1 times => <1ms]
+   lockfile_parser#parse_state-\->lockfile_parser#parse_dependency[lockfile_parser#parse_dependency => 237 times => 5ms]
+   lockfile_parser#parse_state-\->lockfile_parser#parse_bundled_with[lockfile_parser#parse_bundled_with => 1 time => <1 ms]
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/bc5096062efa49a2c10227950ba3919a.png' alt='diagram image' width='100%'>
+
 
 ---
 
 Bundler#definition
 ---
 
+
+<!---
 ```diagram
 gantt
    title file: gems/bundler-1.14.5/lib/bundler.rb method: definition
@@ -31,6 +38,9 @@ gantt
    configure :a1, 0.002, 0.016
    Definition.build(default_gemfile, default_lockfile, unlock) :a1, 0.016, 0.226
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/23b676377c99e839cbedb08ef02c2580.png' alt='diagram image' width='100%'>
+
 
 As we can see, `Definition.build` take a long time to process.
 
