@@ -1,7 +1,5 @@
 # bundler/lockfile_parser.rb
 
-
-
 <!---
 ```diagram
 gantt
@@ -73,8 +71,6 @@ By the diagram below, we can see the following from our case statement:
 | parse_bundled_with | 1 time | 1 ms | - |
 
 
-
-
 <!---
 ```diagram
 gantt
@@ -113,3 +109,123 @@ gantt
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/b23337a3a983b311ac0d2c34e6f2663d.png' alt='diagram image' width='100%'>
 
+---
+
+parse_state
+---
+
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: parse_source
+   dateFormat  s.SSS
+
+   "case line (run 1203 times)" :a1, 0.000, 0.003
+   "@current_source = nil (run 72 times)" :a1, 0.003, 0.004
+   "@opts = {} (run 72 times)" :a1, 0.004, 0.005
+   "@type = line (run 72 times)" :a1, 0.005, 0.006
+   "value = $2 (run 205 times)" :a1, 0.006, 0.007
+   "value = true if value == 'true' (run 205 times)" :a1, 0.007, 0.008
+   "value = false if value == 'false' (run 205 times)" :a1, 0.008, 0.009
+   "key = $1 (run 205 times)" :a1, 0.009, 0.010
+   "if @opts[key] (run 205 times)" :a1, 0.010, 0.011
+   "@opts[key] = value (run 205 times)" :a1, 0.011, 0.014
+   "case @type (run 72 times)" :a1, 0.014, 0.015
+   "@current_source = TYPES[@type].from_lock(@opts) (run 71 times)" :a1, 0.015, 0.016
+   "if @sources.include?(@current_source) (run 71 times)" :a1, 0.016, 0.017
+   "@sources << @current_source (run 71 times)" :a1, 0.017, 0.018
+   "parse_spec(line) (run 854 times)" :a1, 0.018, 0.057
+   "Array(@opts['remote']).each do |url|" :a1, 0.057, 0.058
+   "@rubygems_aggregate.add_remote(url)" :a1, 0.058, 0.059
+   "@current_source = @rubygems_aggregate" :a1, 0.059, 0.060
+```
+
+`parse_spec` is the obvious bulk of this method, so let's also look there.
+
+---
+
+parse_spec
+---
+
+The parse spec code looks like so:
+
+```ruby
+def parse_spec(line)
+  if line =~ NAME_VERSION_4
+    name = $1
+    version = $2
+    platform = $3
+    version = Gem::Version.new(version)
+    platform = platform ? Gem::Platform.new(platform) : Gem::Platform::RUBY
+    @current_spec = LazySpecification.new(name, version, platform)
+    @current_spec.source = @current_source
+
+    # Avoid introducing multiple copies of the same spec (caused by
+    # duplicate GIT sections)
+    @specs[@current_spec.identifier] ||= @current_spec
+  elsif line =~ NAME_VERSION_6
+    name = $1
+    version = $2
+    version = version.split(",").map(&:strip) if version
+    dep = Gem::Dependency.new(name, version)
+    @current_spec.dependencies << dep
+  end
+end
+```
+
+I'd first like to see how often each part is called.
+
+- NAME_VERSION_4, called 374 times, took 0.0165s
+- NAME_VERSION_6, called 480 times, took 0.0168s
+
+Which means they take equally as long, but the NAME_VERSION_4 option is slower taking about 0.000044s for each run as opposed to 0.000035s for each run.
+
+So, what is the difference between these two? Well NAME_VERSION_4 is a top level dependency, whereas NAME_VERSION_6 is a sub-dependency, it seems.
+
+```ruby
+ NAME VERSION 4     web-console (3.4.0)
+ NAME VERSION 6       actionview (>= 5.0)
+ NAME VERSION 6       activemodel (>= 5.0)
+ NAME VERSION 6       debug_inspector
+ NAME VERSION 6       railties (>= 5.0)
+ NAME VERSION 4     webmock (2.3.2)
+ NAME VERSION 6       addressable (>= 2.3.6)
+ NAME VERSION 6       crack (>= 0.3.2)
+ NAME VERSION 6       hashdiff
+```
+
+So what does this actually do? Seems it resolves specifications from the lockfile. The "4 space" (NAME VERSION 4) seems to also load a current spec, which I don't quite get. Seems we re-assign this class level variable a lot to avoid passing it around.
+
+## NAME_VERSION_4
+
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: name_version_four
+   dateFormat  s.SSS
+
+   "name = $1 (run 374 times)" :a1, 0.000, 0.001
+   "version = $2 (run 374 times)" :a1, 0.001, 0.002
+   "platform = $3 (run 374 times)" :a1, 0.002, 0.003
+   "version = Gem::Version.new(version) (run 374 times)" :a1, 0.003, 0.004
+   "platform = platform ? Gem::Platform.new(platform) : Gem::Platform::RUBY (run 374 times)" :a1, 0.004, 0.005
+   "@current_spec = LazySpecification.new(name  version  platform) (run 374 times)" :a1, 0.005, 0.007
+   "@current_spec.source = @current_source (run 374 times)" :a1, 0.007, 0.064
+```
+
+`"@current_spec.source = @current_source (run 374 times)" :a1, 0.007, 0.064` is an obvious outlier. We'll look into that more in a moment.
+
+## NAME_VERSION_6
+
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: name_version_six
+   dateFormat  s.SSS
+
+   "name = $1 (run 480 times)" :a1, 0.000, 0.001
+   "version = $2 (run 480 times)" :a1, 0.001, 0.002
+   "version = version.split(' ').map(&:strip) if version (run 480 times)" :a1, 0.002, 0.003
+   "dep = Gem::Dependency.new(name  version) (run 480 times)" :a1, 0.003, 0.014
+   "@current_spec.dependencies << dep (run 480 times)" :a1, 0.014, 0.015
+   "@specs[@current_spec.identifier] ||= @current_spec (run 480 times)" :a1, 0.015, 0.068
+```
+
+First, I find it interesting that `Gem::Dependency.new(name, version) (run 480 times)` takes 11ms. But more so, the 50ms spend on `@specs[@current_spec.identifier] ||= @current_spec` is interesting.
