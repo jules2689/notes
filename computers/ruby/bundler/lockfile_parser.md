@@ -114,6 +114,8 @@ gantt
 parse_state
 ---
 
+
+<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: parse_source
@@ -138,6 +140,9 @@ gantt
    "@rubygems_aggregate.add_remote(url)" :a1, 0.058, 0.059
    "@current_source = @rubygems_aggregate" :a1, 0.059, 0.060
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/3da2e08ca9de69d7807f16e8c3286a32.png' alt='diagram image' width='100%'>
+
 
 `parse_spec` is the obvious bulk of this method, so let's also look there.
 
@@ -197,6 +202,8 @@ So what does this actually do? Seems it resolves specifications from the lockfil
 
 ## NAME_VERSION_4
 
+
+<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: name_version_four
@@ -210,11 +217,16 @@ gantt
    "@current_spec = LazySpecification.new(name  version  platform) (run 374 times)" :a1, 0.005, 0.007
    "@current_spec.source = @current_source (run 374 times)" :a1, 0.007, 0.064
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/dc9ea02160e78f74261ecec08f2c82b8.png' alt='diagram image' width='100%'>
+
 
 `"@current_spec.source = @current_source (run 374 times)" :a1, 0.007, 0.064` is an obvious outlier. We'll look into that more in a moment.
 
 ## NAME_VERSION_6
 
+
+<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: name_version_six
@@ -227,5 +239,8 @@ gantt
    "@current_spec.dependencies << dep (run 480 times)" :a1, 0.014, 0.015
    "@specs[@current_spec.identifier] ||= @current_spec (run 480 times)" :a1, 0.015, 0.068
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/5cceb73c846e4f2dd11005654ca51c09.png' alt='diagram image' width='100%'>
+
 
 First, I find it interesting that `Gem::Dependency.new(name, version) (run 480 times)` takes 11ms. But more so, the 50ms spend on `@specs[@current_spec.identifier] ||= @current_spec` is interesting.

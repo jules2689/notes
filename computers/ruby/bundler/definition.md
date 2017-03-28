@@ -1,26 +1,31 @@
 # bundler/definition.rb
 
+
+<!---
 ```diagram
 graph TD
-   Bundler#definition[Bundler#definition 226ms]--220ms-->Definition.build
-   Definition.build--211ms-->Dsl#evaluate
-   Dsl#evaluate--55ms-->builder.eval_gemfile
-   Dsl#evaluate--130ms-->Definition#new[builder.to_definition -> Definition#new]
-   Definition#new--48ms-->LockfileParser.new
-   Definition#new--68ms-->definition#converge_dependencies
-   definition#converge_dependencies--113K calls, 58ms-->locked_deps.select
-   LockfileParser.new--1370 calls, 26ms-->lockfile_parser#parse_state
-   lockfile_parser#parse_state--1131 times, 22ms-->lockfile_parser#parse_source
-   lockfile_parser#parse_state--1 times, <1ms-->lockfile_parser#parse_platform
-   lockfile_parser#parse_state--237 times, 5ms-->lockfile_parser#parse_dependency
-   lockfile_parser#parse_state--1 times, <1ms-->lockfile_parser#parse_bundled_with
-   lockfile_parser#parse_source--854 calls, about 15ms-->lockfile_parser#parse_spec
-   lockfile_parser#parse_spec--374 calls, 7.5ms-->NAME_VERSION_4
-   lockfile_parser#parse_spec--480 calls, 7.5ms-->NAME_VERSION_6
-   NAME_VERSION_4--6ms-->current_spec.source
-   NAME_VERSION_6--2ms-->Gem::Dependency.new(name, version)
-   NAME_VERSION_6--6ms-->specs=current_spec
+   Bundler#definition[Bundler#definition 226ms]--220ms-\->Definition.build
+   Definition.build--211ms-\->Dsl#evaluate
+   Dsl#evaluate--55ms-\->builder.eval_gemfile
+   Dsl#evaluate--130ms-\->Definition#new[builder.to_definition -> Definition#new]
+   Definition#new--48ms-\->LockfileParser.new
+   Definition#new--68ms-\->definition#converge_dependencies
+   definition#converge_dependencies--113K calls, 58ms-\->locked_deps.select
+   LockfileParser.new--1370 calls, 26ms-\->lockfile_parser#parse_state
+   lockfile_parser#parse_state--1131 times, 22ms-\->lockfile_parser#parse_source
+   lockfile_parser#parse_state--1 times, <1ms-\->lockfile_parser#parse_platform
+   lockfile_parser#parse_state--237 times, 5ms-\->lockfile_parser#parse_dependency
+   lockfile_parser#parse_state--1 times, <1ms-\->lockfile_parser#parse_bundled_with
+   lockfile_parser#parse_source--854 calls, about 15ms-\->lockfile_parser#parse_spec
+   lockfile_parser#parse_spec--374 calls, 7.5ms-\->NAME_VERSION_4
+   lockfile_parser#parse_spec--480 calls, 7.5ms-\->NAME_VERSION_6
+   NAME_VERSION_4--6ms-\->current_spec.source
+   NAME_VERSION_6--2ms-\->Gem::Dependency.new(name, version)
+   NAME_VERSION_6--6ms-\->specs=current_spec
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/2574f7e315f700cb30ec7702094a9d24.png' alt='diagram image' width='100%'>
+
 
 ---
 
