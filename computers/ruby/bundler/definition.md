@@ -1,6 +1,5 @@
 # bundler/definition.rb
 
-
 <!---
 ```diagram
 graph TD
@@ -26,12 +25,10 @@ graph TD
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/2574f7e315f700cb30ec7702094a9d24.png' alt='diagram image' width='100%'>
 
-
 ---
 
 Bundler#definition
 ---
-
 
 <!---
 ```diagram
@@ -55,7 +52,6 @@ As we can see, `Definition.build` take a long time to process.
 Definition.build
 ---
 
-
 <!---
 ```diagram
 gantt
@@ -70,14 +66,12 @@ gantt
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/8e82477f959f767a7fd4cf8c58b1f5fb.png' alt='diagram image' width='100%'>
 
-
 From here we can see `Dsl.evaluate` takes the most time
 
 ---
 
 Dsl.evaluate
 ---
-
 
 <!---
 ```diagram
@@ -92,16 +86,12 @@ gantt
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/9a323efe751f19d3f0e6b0a4664dcc77.png' alt='diagram image' width='100%'>
 
-
-
 We can see that the time is split between `eval_gemfile` and `to_definition`.
 
 ---
 
 builder.eval_gemfile
 ---
-
-
 
 <!---
 ```diagram
@@ -135,7 +125,6 @@ This method simply calls `Definition.new`, so we'll move to that instead.
 
 Definition.new
 ---
-
 
 <!---
 ```diagram
@@ -186,7 +175,6 @@ gantt
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/b09f829c9ab8241be0bf624e1fccb56e.png' alt='diagram image' width='100%'>
 
-
 Some lines that pop out are as follows:
 
 | line | time |
@@ -209,34 +197,51 @@ See [lockfile_parser](../lockfile_parser)
 definition#coverge_dependencies
 ---
 
-
-<!---
 ```diagram
 gantt
-   title bundler/definition.rb#converge_dependencies
+   title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
    dateFormat  s.SSS
 
-   "(@dependencies + @locked_deps).each do |dep|" :a1, 0.000, 0.001
-   "locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times)" :a1, 0.001, 0.186
-   "if Bundler.settings[:frozen] && !locked_source.nil? && (run 474 times)" :a1, 0.186, 0.191
-   "elsif dep.source (run 474 times)" :a1, 0.191, 0.192
-   "dep.source = sources.get(dep.source) (run 142 times)" :a1, 0.192, 0.197
-   "if dep.source.is_a?(Source::Gemspec) (run 474 times)" :a1, 0.197, 0.198
-   "dependency_without_type = proc {|d| Gem::Dependency.new(d.name *d.requirement.as_list) } (run 475 times)" :a1, 0.198, 0.214
-   "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.map(&dependency_without_type))" :a1, 0.214, 0.215
+   "(@dependencies + @locked_deps.values).each do |dep|" :a1, 0.000, 0.001
+   "locked_source = @locked_deps[dep.name] (run 474 times)" :a1, 0.001, 0.002
+   "if Bundler.settings[:frozen] && !locked_source.nil? && (run 474 times)" :a1, 0.002, 0.005
+   "elsif dep.source (run 474 times)" :a1, 0.005, 0.006
+   "dep.source = sources.get(dep.source) (run 142 times)" :a1, 0.006, 0.009
+   "if dep.source.is_a?(Source::Gemspec) (run 474 times)" :a1, 0.009, 0.010
+   "dependency_without_type = proc {|d| Gem::Dependency.new(d.name  *d.requirement.as_list) } (run 475 times)" :a1, 0.010, 0.026
+   "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.values.map(&dependency_without_type))" :a1, 0.026, 0.027
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/6e16e312d0841cc8d91df0ed7768669a.png' alt='diagram image' height='400px'>
-
 
 It is very obvious to see that this particular line `locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times) :a1, 0.001, 0.182` is the root cause of the slowness.
 Run 112-113K times for the Shopify application, it is slow and could likely benefit from some up front hashing.
 
+This particular line was fixed by [this pull request](https://github.com/bundler/bundler/pull/5539).
+
+After fixing the issue surrounding select, my attention turned to `dependency_without_type = proc {|d| Gem::Dependency.new(d.name *d.requirement.as_list) }`, which is run 475 times and takes 16ms. [This pull request](https://github.com/bundler/bundler/pull/5354) provides me with the context to know that we want to compare name and requirement, but not necessarily anything else. 
+
+Changing that `Gem::Dependency` to an array (`[d.name, d.requirement.as_list]`), we get this runtime instead.
+
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
+   dateFormat  s.SSS
+
+   "(@dependencies + @locked_deps.values).each do |dep|" :a1, 0.000, 0.001
+   "locked_source = @locked_deps dep.name (run 474 times)" :a1, 0.001, 0.002
+   "if Bundler.settings frozen && !locked_source.nil? && (run 474 times)" :a1, 0.002, 0.005
+   "elsif dep.source (run 474 times)" :a1, 0.005, 0.006
+   "dep.source = sources.get(dep.source) (run 142 times)" :a1, 0.006, 0.008
+   "if dep.source.is_a?(SourceGemspec) (run 474 times)" :a1, 0.008, 0.009
+   "dependency_without_type = proc { |d| [d.name  *d.requirement.as_list] } (run 475 times)" :a1, 0.009, 0.012
+   "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.values.map(&dependency_without_type))" :a1, 0.012, 0.013
+```
+
+As we can see, this halves the time required by that method, Let's look at the documentation for `Gem::Dependency` to understand how equality works so we don't regress.
 ---
 
 Actions
 ---
- 
+
 - Convert @locked_deps to hash, see if that improves things with `O(1)` access instead
 - Can `parse_source` in the lockfile parse be faster?
 - Look at caching the evaled gemfile
