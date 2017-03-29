@@ -197,6 +197,8 @@ See [lockfile_parser](../lockfile_parser)
 definition#coverge_dependencies
 ---
 
+
+<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
@@ -211,6 +213,9 @@ gantt
    "dependency_without_type = proc {|d| Gem::Dependency.new(d.name  *d.requirement.as_list) } (run 475 times)" :a1, 0.010, 0.026
    "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.values.map(&dependency_without_type))" :a1, 0.026, 0.027
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/9fa239921639c7fb855711c800cd6576.png' alt='diagram image' width='100%'>
+
 
 It is very obvious to see that this particular line `locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times) :a1, 0.001, 0.182` is the root cause of the slowness.
 Run 112-113K times for the Shopify application, it is slow and could likely benefit from some up front hashing.
@@ -221,6 +226,8 @@ After fixing the issue surrounding select, my attention turned to `dependency_wi
 
 Changing that `Gem::Dependency` to an array (`[d.name, d.requirement.as_list]`), we get this runtime instead.
 
+
+<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
@@ -235,6 +242,9 @@ gantt
    "dependency_without_type = proc { |d| [d.name  *d.requirement.as_list] } (run 475 times)" :a1, 0.009, 0.012
    "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.values.map(&dependency_without_type))" :a1, 0.012, 0.013
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/901c92cc642a832f35d79a8b7bdca81a.png' alt='diagram image' width='100%'>
+
 
 As we can see, this halves the time required by that method, Let's look at the documentation for `Gem::Dependency` to understand how equality works so we don't regress.
 ---
