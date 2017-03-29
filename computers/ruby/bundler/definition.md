@@ -224,7 +224,25 @@ This particular line was fixed by [this pull request](https://github.com/bundler
 
 After fixing the issue surrounding select, my attention turned to `dependency_without_type = proc {|d| Gem::Dependency.new(d.name *d.requirement.as_list) }`, which is run 475 times and takes 16ms. [This pull request](https://github.com/bundler/bundler/pull/5354) provides me with the context to know that we want to compare name and requirement, but not necessarily anything else. 
 
-Changing that `Gem::Dependency` to an array (`[d.name, d.requirement.as_list]`), we get this runtime instead.
+Let's look at the documentation for `Gem::Dependency` to understand how equality works so we don't regress. The entry for comparison shows the following:
+
+> Uses this dependency as a pattern to compare to other. This dependency will match if the name matches the other's name, and other has only an equal version requirement that satisfies this dependency.
+
+As we can see, we simply need to match the name and version requirement to match. This means we don't necessarily need the `Gem::Dependency` as we simply use it for equality. That said `equal version requirement` isn't a particularly easy thing to do.
+Requirements such as `1.0.1` and `> 1.0.0` are ok, but are not easily compared. This means we can't do something more naive like compare 2 arrays. Let's look at what the comparison is actually doing.
+
+The comparison is making sure all dependencies match. We could likely do that with individual comparisons, but we'd want to avoid comparing everything if needed (aka bail with false on the first mis-match).
+The following block will make sure we have a corresponding entry in `@locked_deps` for all dependencies and that they match.
+
+```ruby
+@dependencies.any? do |dependency|
+ locked_dep = @locked_deps[dependency.name]
+ next true if locked_dep.nil?
+ dependency === locked_dep
+end
+```
+
+This results in the following timings:
 
 
 <!---
@@ -234,24 +252,30 @@ gantt
    dateFormat  s.SSS
 
    "(@dependencies + @locked_deps.values).each do |dep|" :a1, 0.000, 0.001
-   "locked_source = @locked_deps dep.name (run 474 times)" :a1, 0.001, 0.002
-   "if Bundler.settings frozen && !locked_source.nil? && (run 474 times)" :a1, 0.002, 0.005
+   "locked_source = @locked_deps[dep.name] (run 474 times)" :a1, 0.001, 0.002
+   "if Bundler.settings[frozen] && !locked_source.nil? && (run 474 times)" :a1, 0.002, 0.005
    "elsif dep.source (run 474 times)" :a1, 0.005, 0.006
-   "dep.source = sources.get(dep.source) (run 142 times)" :a1, 0.006, 0.008
-   "if dep.source.is_a?(SourceGemspec) (run 474 times)" :a1, 0.008, 0.009
-   "dependency_without_type = proc { |d| [d.name  *d.requirement.as_list] } (run 475 times)" :a1, 0.009, 0.012
-   "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.values.map(&dependency_without_type))" :a1, 0.012, 0.013
+   "dep.source = sources.get(dep.source) (run 142 times)" :a1, 0.006, 0.009
+   "if dep.source.is_a?(SourceGemspec) (run 474 times)" :a1, 0.009, 0.010
+   "@dependencies.any? do |dependency|" :a1, 0.010, 0.011
+   "locked_dep = @locked_deps[dependency.name] (run 9 times)" :a1, 0.011, 0.012
+   "next true if locked_dep.nil? (run 9 times)" :a1, 0.012, 0.013
+   "dependency === locked_dep (run 9 times)" :a1, 0.013, 0.014
 ```
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/901c92cc642a832f35d79a8b7bdca81a.png' alt='diagram image' width='100%'>
 
 
-As we can see, this halves the time required by that method, Let's look at the documentation for `Gem::Dependency` to understand how equality works so we don't regress.
+As you can see, we've saved about half of the method time.
+
+Running the test added to the [pull request](https://github.com/bundler/bundler/pull/5354) used for context results in a success!
+
 ---
 
 Actions
 ---
 
-- Convert @locked_deps to hash, see if that improves things with `O(1)` access instead
+- Convert @locked_deps to hash, see if that improves things with `O(1)` access instead. Fixed in [this pull request](https://github.com/bundler/bundler/pull/5539)
+- Avoid using `Gem::Dependency` just for comparison in `converge_dependencies`. Fixed in [this pull request](https://github.com/bundler/bundler/pull/XXX)
 - Can `parse_source` in the lockfile parse be faster?
 - Look at caching the evaled gemfile
