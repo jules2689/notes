@@ -173,10 +173,10 @@ def parse_spec(line)
 end
 ```
 
-I'd first like to see how often each part is called.
+It takes about 15-17ms to run all of it. I'd like to see how often each part is called.
 
-- NAME_VERSION_4, called 374 times, took 0.0165s
-- NAME_VERSION_6, called 480 times, took 0.0168s
+- NAME_VERSION_4, called 374 times, took about 7ms
+- NAME_VERSION_6, called 480 times, took about 8ms
 
 Which means they take equally as long, but the NAME_VERSION_4 option is slower taking about 0.000044s for each run as opposed to 0.000035s for each run.
 
@@ -220,4 +220,10 @@ gantt
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 6.33.13 PM.png' alt='diagram image' width='100%'>
 
-We can see that `"dep = GemDependency.new(name  version) (run 480 times)" :a1, 0.021, 0.035` takes a check of time, otherwise there's not much bulk here.
+We can see that `"dep = GemDependency.new(name  version) (run 480 times)" :a1, 0.021, 0.035` takes a chunk of time (14ms with gantt generation, 6ms in reality), otherwise there's not much bulk here.
+
+---
+
+So, in the end the reason this file is slower is that it is iterating over many sources and creating `Gem::Dependency` objects. There is likely something we could do to make `LockFileParser` faster, but the work likely won't be worth the time spent.
+
+There isn't much we can do to make this file faster without caching using marshalling the data or something.

@@ -1,29 +1,26 @@
 # bundler/definition.rb
 
-<!---
 ```diagram
 graph TD
-   Bundler#definition[Bundler#definition 226ms]--220ms-\->Definition.build
-   Definition.build--211ms-\->Dsl#evaluate
-   Dsl#evaluate--55ms-\->builder.eval_gemfile
-   Dsl#evaluate--130ms-\->Definition#new[builder.to_definition -> Definition#new]
-   Definition#new--48ms-\->LockfileParser.new
-   Definition#new--68ms-\->definition#converge_dependencies
-   definition#converge_dependencies--113K calls, 58ms-\->locked_deps.select
-   LockfileParser.new--1370 calls, 26ms-\->lockfile_parser#parse_state
-   lockfile_parser#parse_state--1131 times, 22ms-\->lockfile_parser#parse_source
-   lockfile_parser#parse_state--1 times, <1ms-\->lockfile_parser#parse_platform
-   lockfile_parser#parse_state--237 times, 5ms-\->lockfile_parser#parse_dependency
-   lockfile_parser#parse_state--1 times, <1ms-\->lockfile_parser#parse_bundled_with
-   lockfile_parser#parse_source--854 calls, about 15ms-\->lockfile_parser#parse_spec
-   lockfile_parser#parse_spec--374 calls, 7.5ms-\->NAME_VERSION_4
-   lockfile_parser#parse_spec--480 calls, 7.5ms-\->NAME_VERSION_6
-   NAME_VERSION_4--6ms-\->current_spec.source
-   NAME_VERSION_6--2ms-\->Gem::Dependency.new(name, version)
-   NAME_VERSION_6--6ms-\->specs=current_spec
+   Bundler#definition[Bundler#definition 226ms]--120ms-->Definition.build
+   Definition.build--118ms-->Dsl#evaluate
+   Dsl#evaluate--33ms-->builder.eval_gemfile
+   Dsl#evaluate--85ms-->Definition#new[builder.to_definition -> Definition#new]
+   Definition#new--33ms-->LockfileParser.new
+   Definition#new--35ms-->definition#converge_dependencies
+   definition#converge_dependencies--113K calls, 30ms-->locked_deps.select
+   LockfileParser.new--1370 calls, 26ms-->lockfile_parser#parse_state
+   lockfile_parser#parse_state--1131 times, 22ms-->lockfile_parser#parse_source
+   lockfile_parser#parse_state--1 times, <1ms-->lockfile_parser#parse_platform
+   lockfile_parser#parse_state--237 times, 5ms-->lockfile_parser#parse_dependency
+   lockfile_parser#parse_state--1 times, <1ms-->lockfile_parser#parse_bundled_with
+   lockfile_parser#parse_source--854 calls, about 15ms-->lockfile_parser#parse_spec
+   lockfile_parser#parse_spec--374 calls, 7.5ms-->NAME_VERSION_4
+   lockfile_parser#parse_spec--480 calls, 7.5ms-->NAME_VERSION_6
+   NAME_VERSION_4--6ms-->current_spec.source
+   NAME_VERSION_6--2ms-->Gem::Dependency.new(name, version)
+   NAME_VERSION_6--6ms-->specs=current_spec
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/2574f7e315f700cb30ec7702094a9d24.png' alt='diagram image' width='100%'>
 
 ---
 
@@ -112,7 +109,55 @@ gantt
 
 
 We can see here that when we take the contents of the bundler file, and `instance_eval` it, we'll spend about 55ms doing that.
-Without a refactor, we likely cannot get away from this.
+
+Digging into the `instance_eval` a little more using `TracePoint`, we can see that there are hundreds of mini-methods called starting with `dsl#source`. We get this approximate trace:
+
+```ruby
+[161, Bundler::Dsl, :source, :call]
+[336, Bundler::Dsl, :normalize_hash, :call]
+[435, Bundler::Dsl, :normalize_source, :call]
+[449, Bundler::Dsl, :check_primary_source_safety, :call]
+[90, Bundler::SourceList, :rubygems_primary_remotes, :call]
+[38, Bundler::SourceList, :add_rubygems_remote, :call]
+[210, Bundler::Source::Rubygems, :add_remote, :call]
+...
+[115, Bundler::SourceList, :warn_on_git_protocol, :call]
+[245, #<Class:Bundler>, :settings, :call]
+[54, Bundler::Settings, :[], :call]
+[224, Bundler::Settings, :key_for, :call]
+[325, Bundler::Dsl, :with_source, :call]
+[79, Bundler::Dependency, :initialize, :call]
+[38, Gem::Dependency, :initialize, :call]
+...
+[54, #<Class:Gem::Requirement>, :create, :call]
+[123, Gem::Requirement, :initialize, :call]
+[121, Bundler::Dsl, :gem, :call]
+[347, Bundler::Dsl, :normalize_options, :call]
+[336, Bundler::Dsl, :normalize_hash, :call]
+[343, Bundler::Dsl, :valid_keys, :call]
+[418, Bundler::Dsl, :validate_keys, :call]
+[209, Bundler::Dsl, :git, :call]
+[336, Bundler::Dsl, :normalize_hash, :call]
+[24, Bundler::SourceList, :add_git_source, :call]
+[13, Bundler::Source::Git, :initialize, :call]
+[96, Bundler::SourceList, :add_source_to_list, :call]
+[49, Bundler::Source::Git, :hash, :call]
+[79, Bundler::Source::Git, :name, :call]
+[49, Bundler::Source::Git, :hash, :call]
+[79, Bundler::Source::Git, :name, :call]
+... repeat the last block a lot, particularly Bundler::Source::Git calls ...
+[115, Bundler::SourceList, :warn_on_git_protocol, :call]
+[245, #<Class:Bundler>, :settings, :call]
+[54, Bundler::Settings, :[], :call]
+[224, Bundler::Settings, :key_for, :call]
+[325, Bundler::Dsl, :with_source, :call]
+[79, Bundler::Dependency, :initialize, :call]
+[38, Gem::Dependency, :initialize, :call]
+```
+
+Without optimizing dozens of places, this is likely a dead end. We can look at caching, but it is uncacheable. Due to extensive use of procs and default values in hashes, we cannot cache the class object.
+
+This is a dead end.
 
 ---
 
@@ -276,6 +321,7 @@ Actions
 ---
 
 - Convert @locked_deps to hash, see if that improves things with `O(1)` access instead. Fixed in [this pull request](https://github.com/bundler/bundler/pull/5539)
-- Avoid using `Gem::Dependency` just for comparison in `converge_dependencies`. Fixed in [this pull request](https://github.com/bundler/bundler/pull/XXX)
-- Can `parse_source` in the lockfile parse be faster?
-- Look at caching the evaled gemfile
+- Avoid using `Gem::Dependency` just for comparison in `converge_dependencies`. Fixed in [this pull request](https://github.com/bundler/bundler/pull/5546)
+- Can `parse_source` in the lockfile parse be faster? *Not really, this was a dead end*
+- Look at caching the evaled gemfile. Not easily possible. There are tons of side effects of the eval which change class level variables. It would require a large refactor for minimal benefit.
+- Cache the class instance instead? Uncacheable. Due to extensive use of procs and default values in hashes, we cannot cache the class object.
