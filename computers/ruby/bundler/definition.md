@@ -171,7 +171,6 @@ This method simply calls `Definition.new`, so we'll move to that instead.
 Definition.new
 ---
 
-<!---
 ```diagram
 gantt
    title lib/bundler/definition.rb#initialize
@@ -217,8 +216,6 @@ gantt
    @requires = compute_requires :a1, 0.182, 0.183
    fixup_dependency_types! :a1, 0.183, 0.194
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/b09f829c9ab8241be0bf624e1fccb56e.png' alt='diagram image' width='100%'>
 
 Some lines that pop out are as follows:
 
