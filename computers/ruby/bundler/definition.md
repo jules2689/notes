@@ -243,7 +243,6 @@ definition#coverge_dependencies
 ---
 
 
-<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
@@ -258,9 +257,6 @@ gantt
    "dependency_without_type = proc {|d| Gem::Dependency.new(d.name  *d.requirement.as_list) } (run 475 times)" :a1, 0.010, 0.026
    "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.values.map(&dependency_without_type))" :a1, 0.026, 0.027
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/9fa239921639c7fb855711c800cd6576.png' alt='diagram image' width='100%'>
-
 
 It is very obvious to see that this particular line `locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times) :a1, 0.001, 0.182` is the root cause of the slowness.
 Run 112-113K times for the Shopify application, it is slow and could likely benefit from some up front hashing.
@@ -289,8 +285,6 @@ end
 
 This results in the following timings:
 
-
-<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
@@ -307,9 +301,6 @@ gantt
    "next true if locked_dep.nil? (run 9 times)" :a1, 0.012, 0.013
    "dependency === locked_dep (run 9 times)" :a1, 0.013, 0.014
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/901c92cc642a832f35d79a8b7bdca81a.png' alt='diagram image' width='100%'>
-
 
 As you can see, we've saved about half of the method time.
 
