@@ -1,31 +1,26 @@
 # bundler/definition.rb
 
-
-<!---
 ```diagram
 graph TD
-   Bundler#definition[Bundler#definition 226ms]--120ms-\->Definition.build
-   Definition.build--118ms-\->Dsl#evaluate
-   Dsl#evaluate--33ms-\->builder.eval_gemfile
-   Dsl#evaluate--85ms-\->Definition#new[builder.to_definition -> Definition#new]
-   Definition#new--33ms-\->LockfileParser.new
-   Definition#new--35ms-\->definition#converge_dependencies
-   definition#converge_dependencies--113K calls, 30ms-\->locked_deps.select
-   LockfileParser.new--1370 calls, 26ms-\->lockfile_parser#parse_state
-   lockfile_parser#parse_state--1131 times, 22ms-\->lockfile_parser#parse_source
-   lockfile_parser#parse_state--1 times, <1ms-\->lockfile_parser#parse_platform
-   lockfile_parser#parse_state--237 times, 5ms-\->lockfile_parser#parse_dependency
-   lockfile_parser#parse_state--1 times, <1ms-\->lockfile_parser#parse_bundled_with
-   lockfile_parser#parse_source--854 calls, about 15ms-\->lockfile_parser#parse_spec
-   lockfile_parser#parse_spec--374 calls, 7.5ms-\->NAME_VERSION_4
-   lockfile_parser#parse_spec--480 calls, 7.5ms-\->NAME_VERSION_6
-   NAME_VERSION_4--6ms-\->current_spec.source
-   NAME_VERSION_6--2ms-\->Gem::Dependency.new(name, version)
-   NAME_VERSION_6--6ms-\->specs=current_spec
+   Bundler#definition[Bundler#definition 226ms]--120ms-->Definition.build
+   Definition.build--118ms-->Dsl#evaluate
+   Dsl#evaluate--33ms-->builder.eval_gemfile
+   Dsl#evaluate--85ms-->Definition#new[builder.to_definition -> Definition#new]
+   Definition#new--33ms-->LockfileParser.new
+   Definition#new--35ms-->definition#converge_dependencies
+   definition#converge_dependencies--113K calls, 30ms-->locked_deps.select
+   LockfileParser.new--1370 calls, 26ms-->lockfile_parser#parse_state
+   lockfile_parser#parse_state--1131 times, 22ms-->lockfile_parser#parse_source
+   lockfile_parser#parse_state--1 times, <1ms-->lockfile_parser#parse_platform
+   lockfile_parser#parse_state--237 times, 5ms-->lockfile_parser#parse_dependency
+   lockfile_parser#parse_state--1 times, <1ms-->lockfile_parser#parse_bundled_with
+   lockfile_parser#parse_source--854 calls, about 15ms-->lockfile_parser#parse_spec
+   lockfile_parser#parse_spec--374 calls, 7.5ms-->NAME_VERSION_4
+   lockfile_parser#parse_spec--480 calls, 7.5ms-->NAME_VERSION_6
+   NAME_VERSION_4--6ms-->current_spec.source
+   NAME_VERSION_6--2ms-->Gem::Dependency.new(name, version)
+   NAME_VERSION_6--6ms-->specs=current_spec
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/a24ee98f37dd33b571a4efa535c1aa68.png' alt='diagram image' width='100%'>
-
 
 ---
 
@@ -176,7 +171,6 @@ This method simply calls `Definition.new`, so we'll move to that instead.
 Definition.new
 ---
 
-
 <!---
 ```diagram
 gantt
@@ -226,16 +220,16 @@ gantt
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/b09f829c9ab8241be0bf624e1fccb56e.png' alt='diagram image' width='100%'>
 
+Taking some of the more "expensive" lines, we can dig a bit deeper to get more accurate numbers.
 
-Some lines that pop out are as follows:
-
-| line | time |
-| -- | -- |
-| `@locked_gems = LockfileParser.new(@lockfile_contents) :a1, 0.014, 0.062` | 48 ms |
-| `converge_path_sources_to_gemspec_sources :a1, 0.076, 0.094` | 18 ms |
-| `@source_changes = converge_sources :a1, 0.095, 0.109` | 14 ms |
-| `@dependency_changes = converge_dependencies :a1, 0.113, 0.181` | 68 ms |
-| `fixup_dependency_types! :a1, 0.183, 0.194` | 11 ms |
+| line | num_calls | time (s) |
+| --- | --- | --- |
+| @locked_gems = LockfileParser.new(@lockfile_contents), :a1, , | 1 | 0.03465300000971183 |
+| @locked_specs   = SpecSet.new(@locked_gems.specs), :a1, , | 1 | 0.002618999977130443 |
+| converge_path_sources_to_gemspec_sources, :a1, , | 1 | 0.006308999989414588 |
+| @source_changes = converge_sources, :a1, , | 1 | 0.010037000000011176 |
+| @dependency_changes = converge_dependencies, :a1, , | 1 | 0.022082999988924712 |
+| fixup_dependency_types!, :a1, , | 1 | 0.0025529999984428287 |
 
 ---
 
@@ -250,8 +244,6 @@ definition#coverge_dependencies
 ---
 
 
-
-<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
@@ -266,9 +258,6 @@ gantt
    "dependency_without_type = proc {|d| Gem::Dependency.new(d.name  *d.requirement.as_list) } (run 475 times)" :a1, 0.010, 0.026
    "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.values.map(&dependency_without_type))" :a1, 0.026, 0.027
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/9fa239921639c7fb855711c800cd6576.png' alt='diagram image' width='100%'>
-
 
 It is very obvious to see that this particular line `locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times) :a1, 0.001, 0.182` is the root cause of the slowness.
 Run 112-113K times for the Shopify application, it is slow and could likely benefit from some up front hashing.
@@ -297,8 +286,6 @@ end
 
 This results in the following timings:
 
-
-<!---
 ```diagram
 gantt
    title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
@@ -315,9 +302,6 @@ gantt
    "next true if locked_dep.nil? (run 9 times)" :a1, 0.012, 0.013
    "dependency === locked_dep (run 9 times)" :a1, 0.013, 0.014
 ```
---->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/cf900e705f924982efd13e032a7167fa.png' alt='diagram image' width='100%'>
-
 
 As you can see, we've saved about half of the method time.
 
