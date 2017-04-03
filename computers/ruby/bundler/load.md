@@ -29,3 +29,161 @@ gantt
    "lock(:preserve_unknown_sections => true)" :a1, 93.292, 99.849
    "self" :a1, 99.849, 100.000
 ```
+
+As we can see, `specs = groups.any? ? @definition.specs_for(groups) : requested_specs` takes the most time (about 85% of the time).
+
+Let's break that down a bit. I'll just change the turnary to an if/else and see what that produces.
+
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/runtime.rb method: setup
+   dateFormat  s.SSS
+
+   "groups.map!(&:to_sym)" :a1, 0.000, 0.145
+   "clean_load_path" :a1, 0.145, 0.290
+   "specs = if groups.any?" :a1, 0.290, 0.435
+   "requested_specs" :a1, 0.435, 82.871
+   "SharedHelpers.set_bundle_environment" :a1, 82.871, 83.016
+   "Bundler.rubygems.replace_entrypoints(specs)" :a1, 83.016, 88.346
+   "load_paths = specs.map do |spec|" :a1, 88.346, 88.491
+   "unless spec.loaded_from (run 375 times)" :a1, 88.491, 88.636
+   "if (activated_spec = Bundler.rubygems.loaded_specs(spec.name)) && activated_spec.version != spec.version (run 375 times)" :a1, 88.636, 88.780
+   "Bundler.rubygems.mark_loaded(spec) (run 375 times)" :a1, 88.780, 88.925
+   "spec.load_paths.reject {|path| $LOAD_PATH.include?(path) } (run 804 times)" :a1, 88.925, 89.070
+   "if insert_index = Bundler.rubygems.load_path_insert_index" :a1, 89.070, 89.215
+   "$LOAD_PATH.insert(insert_index  *load_paths)" :a1, 89.215, 89.360
+   "setup_manpath" :a1, 89.360, 91.577
+   "lock(:preserve_unknown_sections => true)" :a1, 91.577, 99.855
+   "self" :a1, 99.855, 100.000
+```
+
+As we can see, `@definition.specs_for(groups)` is not even called. All the time is spent in `requested_specs`.
+
+## requested_specs
+
+It seems this delegates to `definition`.
+
+In `definition`, this is the result:
+
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: requested_specs
+   dateFormat  s.SSS
+
+   "end" :a1, 0.000, 0.173
+   "groups = requested_groups" :a1, 0.173, 0.345
+   "groups.map!(&:to_sym)" :a1, 0.345, 0.518
+   "specs_for(groups)" :a1, 0.518, 100.000
+```
+
+Let's look at `specs_for`
+
+## specs_for
+
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs_for
+   dateFormat  s.SSS
+
+   "deps = dependencies.select {|d| (d.groups & groups).any? } (run 238 times)" :a1, 0.000, 0.152
+   "deps.delete_if {|d| !d.should_include? } (run 238 times)" :a1, 0.152, 0.305
+   "specs.for(expand_dependencies(deps))" :a1, 0.305, 100.000
+```
+
+`specs.for(expand_dependencies(deps))` takes the most time, but is it the `specs.for` part, or the `expand_dependencies` part?
+
+It is the `specs.for` part:
+
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs_for
+   dateFormat  s.SSS
+
+   "deps = dependencies.select {|d| (d.groups & groups).any? } (run 238 times)" :a1, 0.000, 0.167
+   "deps.delete_if {|d| !d.should_include? } (run 238 times)" :a1, 0.167, 0.334
+   "d = expand_dependencies(deps)" :a1, 0.334, 0.854
+   "specs.for(d)" :a1, 0.854, 100.000
+```
+
+## specs.for
+
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs_for
+   dateFormat  s.SSS
+
+   "deps = dependencies.select {|d| (d.groups & groups).any? } (run 238 times)" :a1, 0.000, 0.165
+   "deps.delete_if {|d| !d.should_include? } (run 238 times)" :a1, 0.165, 0.330
+   "d = expand_dependencies(deps)" :a1, 0.330, 0.836
+   "s = specs" :a1, 0.836, 75.406
+   "s.for(d)" :a1, 75.406, 100.000
+```
+
+As we can see, about 3/4 of the time is spent making the specs, and 1/4 of the time processing with `for`.
+
+## specs
+
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs
+   dateFormat  s.SSS
+
+   "end" :a1, 0.000, 0.223
+   "begin" :a1, 0.223, 0.445
+   "specs = resolve.materialize(Bundler.settings[:cache_all_platforms] ? dependencies : requested_dependencies)" :a1, 0.445, 92.952
+   "unless specs['bundler'].any?" :a1, 92.952, 95.996
+   "local = Bundler.settings[:frozen] ? rubygems_index : index" :a1, 95.996, 99.286
+   "bundler = local.search(Gem::Dependency.new('bundler'  VERSION)).last" :a1, 99.286, 99.555
+   "specs['bundler'] = bundler if bundler" :a1, 99.555, 99.777
+   "specs" :a1, 99.777, 100.000
+```
+
+This line does quite a lot (`resolve.materialize(Bundler.settings[:cache_all_platforms] ? dependencies : requested_dependencies)`), so let's split it up.
+
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs
+   dateFormat  s.SSS
+
+   "end" :a1, 0.000, 0.222
+   "begin" :a1, 0.222, 0.444
+   "r = resolve" :a1, 0.444, 37.415
+   "deps = if Bundler.settings[:cache_all_platforms]" :a1, 37.415, 37.637
+   "requested_dependencies" :a1, 37.637, 37.859
+   "specs = r.materialize(deps)" :a1, 37.859, 93.610
+   "unless specs['bundler'].any?" :a1, 93.610, 96.213
+   "local = Bundler.settings[:frozen] ? rubygems_index : index" :a1, 96.213, 99.286
+   "bundler = local.search(Gem::Dependency.new('bundler'  VERSION)).last" :a1, 99.286, 99.556
+   "specs['bundler'] = bundler if bundler" :a1, 99.556, 99.778
+   "specs" :a1, 99.778, 100.000
+```
+
+As we can see, `resolve` and `materialize` take the most time.
+
+---
+
+Materializing
+---
+
+| line | num_calls | time (s) |
+| ---- | --------- | -------- |
+| resolve | 73 | 0.05524000007426366 |
+| materialize | 1 | 0.1665900000371039 |
+| __materialize__ | 374 | 0.15040999941993505 |
+| specs | 374 | 0.13627100008307025 |
+| rubygems spec | 296 | 0.03416500013554469 |
+| git specs | 293 | 0.09133500000461936 |
+| search | 596 | 0.012452999944798648 |
+
+
+```diagram
+graph TD
+  materialize -- 150ms --> __materialize__
+  __materialize__ -- 136ms --> specs
+  
+  subgraph __materialize__
+    specs -- 34ms --> rubygems_specs[RubyGems specs]
+    specs -- 91ms --> git_specs[Git Specs]
+    __materialize__ -- 12ms --> search
+  end
+```
