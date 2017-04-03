@@ -8,7 +8,7 @@ The MACD is calculated by:
 - A 9-day EMA of the MACD is plotted on top of this.
 - It is used as a signal line to indicate when to buy and sell.
 
-<img src="http://i.investopedia.com/inv/dictionary/terms/macd1.gif" right="40%" />
+<img src="http://i.investopedia.com/inv/dictionary/terms/macd1.gif" width="300" />
 
 ## Interpretation
 
