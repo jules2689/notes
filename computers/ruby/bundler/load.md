@@ -11,7 +11,7 @@ This method took about `0.6628200000268407s` to run.
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler/runtime.rb method: setup
-   dateFormat  s.SSS
+   numberFormat  %.2f
 
    "groups.map!(&:to_sym)" :a1, 0.000, 0.151
    "clean_load_path" :a1, 0.151, 0.302
@@ -37,7 +37,7 @@ Let's break that down a bit. I'll just change the turnary to an if/else and see 
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler/runtime.rb method: setup
-   dateFormat  s.SSS
+   numberFormat  %.2f
 
    "groups.map!(&:to_sym)" :a1, 0.000, 0.145
    "clean_load_path" :a1, 0.145, 0.290
@@ -68,7 +68,7 @@ In `definition`, this is the result:
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: requested_specs
-   dateFormat  s.SSS
+   numberFormat  %.2f
 
    "end" :a1, 0.000, 0.173
    "groups = requested_groups" :a1, 0.173, 0.345
@@ -83,7 +83,7 @@ Let's look at `specs_for`
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs_for
-   dateFormat  s.SSS
+   numberFormat  %.2f
 
    "deps = dependencies.select {|d| (d.groups & groups).any? } (run 238 times)" :a1, 0.000, 0.152
    "deps.delete_if {|d| !d.should_include? } (run 238 times)" :a1, 0.152, 0.305
@@ -97,7 +97,7 @@ It is the `specs.for` part:
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs_for
-   dateFormat  s.SSS
+   numberFormat  %.2f
 
    "deps = dependencies.select {|d| (d.groups & groups).any? } (run 238 times)" :a1, 0.000, 0.167
    "deps.delete_if {|d| !d.should_include? } (run 238 times)" :a1, 0.167, 0.334
@@ -110,7 +110,7 @@ gantt
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs_for
-   dateFormat  s.SSS
+   numberFormat  %.2f
 
    "deps = dependencies.select {|d| (d.groups & groups).any? } (run 238 times)" :a1, 0.000, 0.165
    "deps.delete_if {|d| !d.should_include? } (run 238 times)" :a1, 0.165, 0.330
@@ -126,7 +126,7 @@ As we can see, about 3/4 of the time is spent making the specs, and 1/4 of the t
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs
-   dateFormat  s.SSS
+   numberFormat  %.2f
 
    "end" :a1, 0.000, 0.223
    "begin" :a1, 0.223, 0.445
@@ -143,7 +143,7 @@ This line does quite a lot (`resolve.materialize(Bundler.settings[:cache_all_pla
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs
-   dateFormat  s.SSS
+   numberFormat  %.2f
 
    "end" :a1, 0.000, 0.222
    "begin" :a1, 0.222, 0.444
