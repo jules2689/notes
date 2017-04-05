@@ -130,6 +130,8 @@ gantt
 
 ## specs.for
 
+
+<!---
 ```diagram
 gantt
    title file: /development/opensource/bundler/lib/bundler/spec_set.rb method: for
@@ -153,6 +155,9 @@ gantt
    "specs << spec" :a1, 98.153, 99.077
    "check ? true : SpecSet.new(specs)" :a1, 99.077, 100.000
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/2e6f41664c612288598541f69ed6d7ce.png' alt='diagram image' width='100%'>
+
 
 ## specs
 
