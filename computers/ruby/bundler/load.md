@@ -229,7 +229,7 @@ graph TD
   end
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/005fba5b5ad80e50382313df2a1f4aaf.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/005fba5b5ad80e50382313df2a1f4aaf.png' alt='diagram image' height="400">
 
 ## git-based specs
 
