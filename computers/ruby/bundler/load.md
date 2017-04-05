@@ -130,7 +130,7 @@ gantt
 
 ## specs.for
 
-```
+```diagram
 gantt
    title file: /development/opensource/bundler/lib/bundler/spec_set.rb method: for
    numberFormat  %.2f
