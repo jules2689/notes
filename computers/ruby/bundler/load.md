@@ -233,6 +233,8 @@ graph TD
 
 ## git-based specs
 
+
+<!---
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler/source/path.rb method: load_spec_files
@@ -249,6 +251,9 @@ gantt
    "if index.empty? && @name && @version (run 71 times)" :a1, 98.156, 99.078
    "index" :a1, 99.078, 100.000
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/f6306b2820e51d12277a5a3cdb344e16.png' alt='diagram image' width='100%'>
+
 
 We can see that we load 82 gemspecs - which takes the most time. Can we cache loading those gemspecs? They aren't going to change in between loads.
 
@@ -256,6 +261,8 @@ Globbing the filesystem also takes a chunk of time (`Dir['#{expanded_path}/#{@gl
 
 ## load_gemspec
 
+
+<!---
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler.rb method: load_gemspec
@@ -266,9 +273,14 @@ gantt
    "@gemspec_cache[key] ||= load_gemspec_uncached(file  validate) (run 82 times)" :a1, 2.748, 98.626
    "@gemspec_cache[key].dup if @gemspec_cache[key]" :a1, 98.626, 100.000
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/f5f3f2c0b026aad72153c3b4b22a88c0.png' alt='diagram image' width='100%'>
+
 
 ## load_gemspec_uncached
 
+
+<!---
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler.rb method: load_gemspec_uncached
@@ -284,3 +296,6 @@ gantt
    "Bundler.rubygems.validate(spec) if validate (run 82 times)" :a1, 97.369, 98.685
    "spec" :a1, 98.685, 100.000
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/3740aaaebfbfa5045d79aab8593f5893.png' alt='diagram image' width='100%'>
+
