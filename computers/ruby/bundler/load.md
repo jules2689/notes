@@ -8,7 +8,6 @@ A quick look at `load.setup` shows us that the `load` method takes a small amoun
 
 This method took about `0.6628200000268407s` to run.
 
-
 <!---
 ```diagram
 gantt
@@ -231,3 +230,26 @@ graph TD
 ```
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/005fba5b5ad80e50382313df2a1f4aaf.png' alt='diagram image' width='100%'>
+
+## git-based specs
+
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/source/path.rb method: load_spec_files
+   dateFormat  s.SSS
+
+   "index = Index.new (run 71 times)" :a1, 0.000, 0.922
+   "if File.directory?(expanded_path) (run 71 times)" :a1, 0.922, 8.775
+   "Dir['#{expanded_path}/#{@glob}'].sort_by {|p| -p.split(File::SEPARATOR).size }.each do |file| (run 153 times)" :a1, 8.775, 23.952
+   "next unless spec = Bundler.load_gemspec(file) (run 82 times)" :a1, 23.952, 94.468
+   "spec.source = self (run 82 times)" :a1, 94.468, 95.390
+   "Bundler.rubygems.set_installed_by_version(spec) (run 82 times)" :a1, 95.390, 96.312
+   "validate_spec(spec) (run 82 times)" :a1, 96.312, 97.234
+   "index << spec (run 82 times)" :a1, 97.234, 98.156
+   "if index.empty? && @name && @version (run 71 times)" :a1, 98.156, 99.078
+   "index" :a1, 99.078, 100.000
+```
+
+We can see that we load 82 gemspecs - which takes the most time. Can we cache loading those gemspecs? They aren't going to change in between loads.
+
+Globbing the filesystem also takes a chunk of time (`Dir['#{expanded_path}/#{@glob}'].sort_by {|p| -p.split(File::SEPARATOR).size }`) - about 15% of 91ms to be exact.
