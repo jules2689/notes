@@ -2,6 +2,8 @@
 
 ## Specification
 
+
+<!---
 ```diagram
 gantt
    title file: /opt/rubies/2.3.3/lib/ruby/site_ruby/2.3.0/rubygems/specification.rb method: load
@@ -21,3 +23,6 @@ gantt
    "LOAD_CACHE[file] = _spec (run 295 times)" :a1, 98.544, 99.272
    "return _spec" :a1, 99.272, 100.000
 ```
+--->
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/f50cd68abdc716c81b609381352d8c7e.png' alt='diagram image' width='100%'>
+
