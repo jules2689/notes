@@ -236,7 +236,7 @@ graph TD
 ```diagram
 gantt
    title file: /src/github.com/jules2689/bundler/lib/bundler/source/path.rb method: load_spec_files
-   dateFormat  s.SSS
+   numberFormat  s.SSS
 
    "index = Index.new (run 71 times)" :a1, 0.000, 0.922
    "if File.directory?(expanded_path) (run 71 times)" :a1, 0.922, 8.775
@@ -253,3 +253,34 @@ gantt
 We can see that we load 82 gemspecs - which takes the most time. Can we cache loading those gemspecs? They aren't going to change in between loads.
 
 Globbing the filesystem also takes a chunk of time (`Dir['#{expanded_path}/#{@glob}'].sort_by {|p| -p.split(File::SEPARATOR).size }`) - about 15% of 91ms to be exact.
+
+## load_gemspec
+
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler.rb method: load_gemspec
+   numberFormat  s.SSS
+
+   "@gemspec_cache ||= {} (run 82 times)" :a1, 0.000, 1.374
+   "key = File.expand_path(file) (run 82 times)" :a1, 1.374, 2.748
+   "@gemspec_cache[key] ||= load_gemspec_uncached(file  validate) (run 82 times)" :a1, 2.748, 98.626
+   "@gemspec_cache[key].dup if @gemspec_cache[key]" :a1, 98.626, 100.000
+```
+
+## load_gemspec_uncached
+
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler.rb method: load_gemspec_uncached
+   numberFormat  s.SSS
+
+   "path = Pathname.new(file) (run 82 times)" :a1, 0.000, 1.315
+   "SharedHelpers.chdir(path.dirname.to_s) do (run 82 times)" :a1, 1.315, 2.631
+   "contents = path.read (run 82 times)" :a1, 2.631, 3.946
+   "spec = if contents[0..2] == '---' # YAML header (run 82 times)" :a1, 3.946, 5.262
+   "eval_gemspec(path  contents) (run 82 times)" :a1, 5.262, 94.738
+   "return unless spec (run 82 times)" :a1, 94.738, 96.054
+   "spec.loaded_from = path.expand_path.to_s (run 82 times)" :a1, 96.054, 97.369
+   "Bundler.rubygems.validate(spec) if validate (run 82 times)" :a1, 97.369, 98.685
+   "spec" :a1, 98.685, 100.000
+```
