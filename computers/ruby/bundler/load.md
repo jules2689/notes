@@ -128,8 +128,33 @@ gantt
 --->
 <img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/25a37703789441a3502a3f0cac608356.png' alt='diagram image' width='100%'>
 
-
 ## specs.for
+
+```
+gantt
+   title file: /development/opensource/bundler/lib/bundler/spec_set.rb method: for
+   numberFormat  %.2f
+
+   "handled = {} (run 4 times)" :a1, 0.000, 0.923
+   "deps = dependencies.dup (run 4 times)" :a1, 0.923, 1.847
+   "specs = [] (run 4 times)" :a1, 1.847, 2.770
+   "skip += ['bundler'] (run 4 times)" :a1, 2.770, 3.693
+   "loop do (run 4 times)" :a1, 3.693, 4.617
+   "break unless dep = deps.shift (run 1834 times)" :a1, 4.617, 5.540
+   "if spec = lookup['bundler'].first (run 4 times)" :a1, 5.540, 6.463
+   "next if handled[dep] || skip.include?(dep.name) (run 1830 times)" :a1, 6.463, 7.387
+   "handled[dep] = true (run 1821 times)" :a1, 7.387, 8.310
+   "if spec = spec_for_dependency(dep  match_current_platform) (run 1821 times)" :a1, 8.310, 9.234
+   "specs << spec (run 1821 times)" :a1, 9.234, 10.157
+   "spec.dependencies.each do |d| (run 1821 times)" :a1, 10.157, 95.383
+   "next if d.type == :development (run 28 times)" :a1, 95.383, 96.307
+   "d = DepProxy.new(d  dep.__platform) unless match_current_platform (run 27 times)" :a1, 96.307, 97.230
+   "deps << d (run 27 times)" :a1, 97.230, 98.153
+   "specs << spec" :a1, 98.153, 99.077
+   "check ? true : SpecSet.new(specs)" :a1, 99.077, 100.000
+```
+
+## specs
 
 
 <!---
