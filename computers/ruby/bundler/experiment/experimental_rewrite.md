@@ -23,7 +23,7 @@ graph TD
  resolve-\->makesure
 ```
 --->
-<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/6b39bed85de3d3cb24187e43db6e5a90.png' alt='diagram image' width='100%'>
+<img src='https://jules2689.github.io/gitcdn/images/website/images/diagram/6b39bed85de3d3cb24187e43db6e5a90.png' alt='diagram image' height='400'>
 
 
 This is a very naive approach as it doesn't really take into account resolving nested dependencies in gemspecs.
