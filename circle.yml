@@ -3,11 +3,22 @@ general:
     only:
       - master
 
+# Cache Apt-Get Results
+dependencies:
+  cache_directories:
+    - "~/.apt-cache"
+  pre:
+    - sudo rm -rf /var/cache/apt/archives && sudo ln -s ~/.apt-cache /var/cache/apt/archives && mkdir -p ~/.apt-cache/partial
+
 checkout:
   post:
     - git submodule sync
     - git submodule update --init --recursive --remote # use submodules
+    - cd .diatex && bundle install --without test
     - gem install htmlbeautifier
+    - sudo apt-get --no-install-recommends install graphviz
+    - sudo apt-get --no-install-recommends install texlive-latex-base
+    - sudo apt-get --no-install-recommends install dvipng
 
 test:
   override:
@@ -15,7 +26,7 @@ test:
     - git config --global user.email "julian+bot@jnadeau.ca" && git config --global user.name "Julian Bot"
 
     # Convert Images and Diagrams for Notes
-    - ruby ./.diatex/diatex ../
+    - BUNDLE_GEMFILE=.diatex/Gemfile bundle exec ruby ./.diatex/diatex ../
     - git status
     - git add --all .
     - git commit -m 'Convert latex and diagram to images' || true
