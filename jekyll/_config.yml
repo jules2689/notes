@@ -4,7 +4,7 @@
 title:               Julian's Notes.
 tagline:             'I am a production engineer. These are my notes'
 description:         'I am a production engineer at Shopify. I work on Developer Infrastructure. These are my notes'
-url:                 'http://notes.jnadeau.ca'
+url:                 'https://notes.jnadeau.ca'
 baseurl:             ''
 favicon:             https://www.gravatar.com/avatar/6e01dd682c021a600a943b0a539ed6a2default=&rating=&size=16
 github_source:       https://github.com/jules2689/notes
