@@ -76,7 +76,7 @@ plugins:
 # ---------------------------------------------------------------
 
 # Put your favicon.ico into `assets/` directory.
-favicon: https://www.gravatar.com/avatar/6e01dd682c021a600a943b0a539ed6a2default=&rating=&size=16
+favicon: https://www.gravatar.com/avatar/6e01dd682c021a600a943b0a539ed6a2?size=16
 
 # Set default keywords (Use a comma to separate)
 keywords: "Notes, Computers"
@@ -232,7 +232,7 @@ social_icons:
 
 # Sidebar Avatar
 # in directory: /assets/images/avatar.gif
-avatar: https://www.gravatar.com/avatar/6e01dd682c021a600a943b0a539ed6a2default=&rating=&size=215
+avatar: https://www.gravatar.com/avatar/6e01dd682c021a600a943b0a539ed6a2?size=215
 
 
 # Table Of Contents in the Sidebar
