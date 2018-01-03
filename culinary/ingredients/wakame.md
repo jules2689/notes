@@ -1,4 +1,4 @@
-<img src="http://img.mindbodygreen.com/image/upload/c_limit,w_350,f_auto/ftr/wakame.jpg" align="right" width="40%"/>
+<img src="http://img.mindbodygreen.com/image/upload/c_limit,w_350,f_auto/ftr/wakame.jpg"/>
 
 # Wakame (Seaweed)
 
