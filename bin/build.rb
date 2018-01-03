@@ -28,7 +28,7 @@ files.each do |file|
 title: #{title}
 date: #{create_time}
 categories:
-- #{tags.join("\n- ")}
+- #{tags.first}
 tags:
 - #{tags.join("\n- ")}
 ---
