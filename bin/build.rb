@@ -8,7 +8,10 @@ FileUtils.rm_rf(Dir.glob("jekyll/_posts/*"))
 files = Dir.glob('**/*.md').reject{ |f| f['jekyll'] || File.basename(f) == "README.md" }
 
 files.each do |file|
+  puts "Processing #{file}"
+
   create_time = DateTime.parse(`git log --format=%aD #{file} | tail -1`)
+  puts "-> #{create_time}"
 
   content = File.read(file)
   title = if mat = content.match(/^# (.*)$/)
@@ -18,6 +21,7 @@ files.each do |file|
   end
   tags = File.dirname(file).split('/').reject { |t| t == "." }
   tags = ["default"] if tags.empty?
+    puts "-> #{tags.join(', ')}"
 
   template = <<-EOF
 ---
