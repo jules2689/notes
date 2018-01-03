@@ -3,9 +3,12 @@
 require 'fileutils'
 require 'time'
 
-FileUtils.rm_rf(Dir.glob("jekyll/_posts/*"))
-
-files = Dir.glob('**/*.md').reject{ |f| f['jekyll'] || File.basename(f) == "README.md" }
+files = if ARGV.empty?
+  FileUtils.rm_rf(Dir.glob("jekyll/_posts/*"))
+  Dir.glob('**/*.md').reject{ |f| f['jekyll'] || File.basename(f) == "README.md" }
+else
+  [ARGV].flatten
+end
 
 files.each do |file|
   puts "Processing #{file}"
