@@ -8,7 +8,7 @@ Developer productivity is not a business concern nor is most of the work confide
 
 ## Phase I
 
-Phase I is simply the initial foundation of the community. The Slack channel, invitations at https://chat.devproductivity.io, is a good first step towards an initial foundation.
+Phase I is simply the initial foundation of the community. The Slack channel, invitations at <https://chat.devproductivity.io>, is a good first step towards an initial foundation.
 
 As we grow the audience, we can start to hold online meet-ups. The first one is currently scheduled for sometime in January 2018.
 
@@ -20,7 +20,7 @@ These simple ideas will allow us to start to grow a community and provide the fo
 
 There is no current ground work laid to bootstrap a community dedicated to developer productivity. This means that we have the opportunity to create this community and share the work we do with each other.
 
-https://devproductivity.io will be a central hub managed by the community. With links to content about continuous integration and testing, automation, operational excellence, developer environments, mobile tooling, and other aspects of developer productivity - this website will be a central location on which to grow a solid foundation.
+<https://devproductivity.io> will be a central hub managed by the community. With links to content about continuous integration and testing, automation, operational excellence, developer environments, mobile tooling, and other aspects of developer productivity - this website will be a central location on which to grow a solid foundation.
 
 This website/community allows us to draw talent and work from the larger pool of engineers working on the same goals, it also allows us to share our ideas, and educate the larger developer community about standard goals.
 
