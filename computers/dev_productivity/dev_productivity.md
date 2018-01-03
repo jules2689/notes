@@ -14,7 +14,7 @@ As we grow the audience, we can start to hold online meet-ups. The first one is 
 
 These simple ideas will allow us to start to grow a community and provide the foundations to introduce work on additional phases of the project.
 
-**Success Criteria:** The community starts to grow and people remain excited. There is a decent turnout for the online meet-ups and people are asking what comes next.
+> **Success Criteria:** The community starts to grow and people remain excited. There is a decent turnout for the online meet-ups and people are asking what comes next.
 
 ## Phase II
 
@@ -24,7 +24,7 @@ There is no current ground work laid to bootstrap a community dedicated to devel
 
 This website/community allows us to draw talent and work from the larger pool of engineers working on the same goals, it also allows us to share our ideas, and educate the larger developer community about standard goals.
 
-**Success Criteria:** The community gets excited about the website and we start to see traffic pick up. The community will start to become more involved and take ownership of parts of the content once the initial site is launched.
+> **Success Criteria:** The community gets excited about the website and we start to see traffic pick up. The community will start to become more involved and take ownership of parts of the content once the initial site is launched.
 
 ## Phase III
 
@@ -34,7 +34,7 @@ In Phase III, we hold our first conference. Development has had conferences of s
 
 By holding the conference, we aim to become a driving force behind Developer Productivity and increase community knowledge and commitment to this community.
 
-**Success Criteria:** We see excitement and participation. The website and the content continues to increase in traffic and a vibrant community is formed.
+> **Success Criteria:** We see excitement and participation. The website and the content continues to increase in traffic and a vibrant community is formed.
 
 ## Phase N
 
