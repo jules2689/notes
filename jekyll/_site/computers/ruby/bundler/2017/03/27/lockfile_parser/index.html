@@ -1,0 +1,1103 @@
+
+<!doctype html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html class="theme-next muse use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/assets/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/assets/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/assets/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="computers,ruby,bundler," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Julian's Notes" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Here, we see that parse_#{@state} is the bulk of the work. This is a dynamic call to parse methods… is any one of them slower than another? To solve this, I split out the dynamic line into a case statement to see which lines were being called. elseif @state + case @state.to_s + when &apos;source&apos; + parse_source(line) + when &apos;dependency&apos; + parse_dependency(line) + when &apos;spec&apos; + parse_spec(line) + when &apos;platform&apos; + parse_platform(line) + when &apos;bundled_with&apos; + parse_bundled_with(line) + when &apos;ruby&apos; + parse_ruby(line) + else + send(&quot;parse_#{@state}&quot;, line) + end - send(&quot;parse_#{@state}&quot;, line) end By the diagram below, we can see the following from our case statement: parse_state number time   parse_source 1131 times 32ms SOURCE did not include line, so it went to the case statement parse_platform 1 time 1 ms - parse_dependency 237 times 15 ms - parse_bundled_with 1 time 1 ms - parse_source parse_spec is the obvious bulk of this method, so let’s also look there. parse_spec The parse spec code looks like so: def parse_spec(line) if line =~ NAME_VERSION_4 name = $1 version = $2 platform = $3 version = Gem::Version.new(version) platform = platform ? Gem::Platform.new(platform) : Gem::Platform::RUBY @current_spec = LazySpecification.new(name, version, platform) @current_spec.source = @current_source # Avoid introducing multiple copies of the same spec (caused by # duplicate GIT sections) @specs[@current_spec.identifier] ||= @current_spec elsif line =~ NAME_VERSION_6 name = $1 version = $2 version = version.split(&quot;,&quot;).map(&amp;amp;:strip) if version dep = Gem::Dependency.new(name, version) @current_spec.dependencies &amp;lt;&amp;lt; dep end end It takes about 15-17ms to run all of it. I’d like to see how often each part is called. NAME_VERSION_4, called 374 times, took about 7ms NAME_VERSION_6, called 480 times, took about 8ms Which means they take equally as long, but the NAME_VERSION_4 option is slower taking about 0.000044s for each run as opposed to 0.000035s for each run. So, what is the difference between these two? Well NAME_VERSION_4 is a top level dependency, whereas NAME_VERSION_6 is a sub-dependency, it seems. NAME VERSION 4 web-console (3.4.0) NAME VERSION 6 actionview (&amp;gt;= 5.0) NAME VERSION 6 activemodel (&amp;gt;= 5.0) NAME VERSION 6 debug_inspector NAME VERSION 6 railties (&amp;gt;= 5.0) NAME VERSION 4 webmock (2.3.2) NAME VERSION 6 addressable (&amp;gt;= 2.3.6) NAME VERSION 6 crack (&amp;gt;= 0.3.2) NAME VERSION 6 hashdiff So what does this actually do? Seems it resolves specifications from the lockfile. The “4 space” (NAME VERSION 4) seems to also load a current spec, which I don’t quite get. Seems we re-assign this class level variable a lot to avoid passing it around. We can see that &quot;dep = GemDependency.new(name version) (run 480 times)&quot; :a1, 0.021, 0.035 takes a chunk of time (14ms with gantt generation, 6ms in reality), otherwise there’s not much bulk here. So, in the end the reason this file is slower is that it is iterating over many sources and creating Gem::Dependency objects. There is likely something we could do to make LockFileParser faster, but the work likely won’t be worth the time spent. There isn’t much we can do to make this file faster without caching using marshalling the data or something.">
+<meta name="keywords" content="computers, ruby, bundler">
+<meta property="og:type" content="article">
+<meta property="og:title" content="bundler/lockfile_parser.rb">
+<meta property="og:url" content="http://localhost:4000/computers/ruby/bundler/2017/03/27/lockfile_parser/">
+<meta property="og:site_name" content="Julian's Notes">
+<meta property="og:description" content="Here, we see that parse_#{@state} is the bulk of the work. This is a dynamic call to parse methods… is any one of them slower than another? To solve this, I split out the dynamic line into a case statement to see which lines were being called. elseif @state + case @state.to_s + when &apos;source&apos; + parse_source(line) + when &apos;dependency&apos; + parse_dependency(line) + when &apos;spec&apos; + parse_spec(line) + when &apos;platform&apos; + parse_platform(line) + when &apos;bundled_with&apos; + parse_bundled_with(line) + when &apos;ruby&apos; + parse_ruby(line) + else + send(&quot;parse_#{@state}&quot;, line) + end - send(&quot;parse_#{@state}&quot;, line) end By the diagram below, we can see the following from our case statement: parse_state number time   parse_source 1131 times 32ms SOURCE did not include line, so it went to the case statement parse_platform 1 time 1 ms - parse_dependency 237 times 15 ms - parse_bundled_with 1 time 1 ms - parse_source parse_spec is the obvious bulk of this method, so let’s also look there. parse_spec The parse spec code looks like so: def parse_spec(line) if line =~ NAME_VERSION_4 name = $1 version = $2 platform = $3 version = Gem::Version.new(version) platform = platform ? Gem::Platform.new(platform) : Gem::Platform::RUBY @current_spec = LazySpecification.new(name, version, platform) @current_spec.source = @current_source # Avoid introducing multiple copies of the same spec (caused by # duplicate GIT sections) @specs[@current_spec.identifier] ||= @current_spec elsif line =~ NAME_VERSION_6 name = $1 version = $2 version = version.split(&quot;,&quot;).map(&amp;amp;:strip) if version dep = Gem::Dependency.new(name, version) @current_spec.dependencies &amp;lt;&amp;lt; dep end end It takes about 15-17ms to run all of it. I’d like to see how often each part is called. NAME_VERSION_4, called 374 times, took about 7ms NAME_VERSION_6, called 480 times, took about 8ms Which means they take equally as long, but the NAME_VERSION_4 option is slower taking about 0.000044s for each run as opposed to 0.000035s for each run. So, what is the difference between these two? Well NAME_VERSION_4 is a top level dependency, whereas NAME_VERSION_6 is a sub-dependency, it seems. NAME VERSION 4 web-console (3.4.0) NAME VERSION 6 actionview (&amp;gt;= 5.0) NAME VERSION 6 activemodel (&amp;gt;= 5.0) NAME VERSION 6 debug_inspector NAME VERSION 6 railties (&amp;gt;= 5.0) NAME VERSION 4 webmock (2.3.2) NAME VERSION 6 addressable (&amp;gt;= 2.3.6) NAME VERSION 6 crack (&amp;gt;= 0.3.2) NAME VERSION 6 hashdiff So what does this actually do? Seems it resolves specifications from the lockfile. The “4 space” (NAME VERSION 4) seems to also load a current spec, which I don’t quite get. Seems we re-assign this class level variable a lot to avoid passing it around. We can see that &quot;dep = GemDependency.new(name version) (run 480 times)&quot; :a1, 0.021, 0.035 takes a chunk of time (14ms with gantt generation, 6ms in reality), otherwise there’s not much bulk here. So, in the end the reason this file is slower is that it is iterating over many sources and creating Gem::Dependency objects. There is likely something we could do to make LockFileParser faster, but the work likely won’t be worth the time spent. There isn’t much we can do to make this file faster without caching using marshalling the data or something.">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.50.46 PM.png">
+<meta property="og:image" content="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.46.45 PM.png">
+<meta property="og:image" content="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.47.00 PM.png">
+<meta property="og:image" content="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 6.33.13 PM.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="bundler/lockfile_parser.rb">
+<meta name="twitter:description" content="Here, we see that parse_#{@state} is the bulk of the work. This is a dynamic call to parse methods… is any one of them slower than another? To solve this, I split out the dynamic line into a case statement to see which lines were being called. elseif @state + case @state.to_s + when &apos;source&apos; + parse_source(line) + when &apos;dependency&apos; + parse_dependency(line) + when &apos;spec&apos; + parse_spec(line) + when &apos;platform&apos; + parse_platform(line) + when &apos;bundled_with&apos; + parse_bundled_with(line) + when &apos;ruby&apos; + parse_ruby(line) + else + send(&quot;parse_#{@state}&quot;, line) + end - send(&quot;parse_#{@state}&quot;, line) end By the diagram below, we can see the following from our case statement: parse_state number time   parse_source 1131 times 32ms SOURCE did not include line, so it went to the case statement parse_platform 1 time 1 ms - parse_dependency 237 times 15 ms - parse_bundled_with 1 time 1 ms - parse_source parse_spec is the obvious bulk of this method, so let’s also look there. parse_spec The parse spec code looks like so: def parse_spec(line) if line =~ NAME_VERSION_4 name = $1 version = $2 platform = $3 version = Gem::Version.new(version) platform = platform ? Gem::Platform.new(platform) : Gem::Platform::RUBY @current_spec = LazySpecification.new(name, version, platform) @current_spec.source = @current_source # Avoid introducing multiple copies of the same spec (caused by # duplicate GIT sections) @specs[@current_spec.identifier] ||= @current_spec elsif line =~ NAME_VERSION_6 name = $1 version = $2 version = version.split(&quot;,&quot;).map(&amp;amp;:strip) if version dep = Gem::Dependency.new(name, version) @current_spec.dependencies &amp;lt;&amp;lt; dep end end It takes about 15-17ms to run all of it. I’d like to see how often each part is called. NAME_VERSION_4, called 374 times, took about 7ms NAME_VERSION_6, called 480 times, took about 8ms Which means they take equally as long, but the NAME_VERSION_4 option is slower taking about 0.000044s for each run as opposed to 0.000035s for each run. So, what is the difference between these two? Well NAME_VERSION_4 is a top level dependency, whereas NAME_VERSION_6 is a sub-dependency, it seems. NAME VERSION 4 web-console (3.4.0) NAME VERSION 6 actionview (&amp;gt;= 5.0) NAME VERSION 6 activemodel (&amp;gt;= 5.0) NAME VERSION 6 debug_inspector NAME VERSION 6 railties (&amp;gt;= 5.0) NAME VERSION 4 webmock (2.3.2) NAME VERSION 6 addressable (&amp;gt;= 2.3.6) NAME VERSION 6 crack (&amp;gt;= 0.3.2) NAME VERSION 6 hashdiff So what does this actually do? Seems it resolves specifications from the lockfile. The “4 space” (NAME VERSION 4) seems to also load a current spec, which I don’t quite get. Seems we re-assign this class level variable a lot to avoid passing it around. We can see that &quot;dep = GemDependency.new(name version) (run 480 times)&quot; :a1, 0.021, 0.035 takes a chunk of time (14ms with gantt generation, 6ms in reality), otherwise there’s not much bulk here. So, in the end the reason this file is slower is that it is iterating over many sources and creating Gem::Dependency objects. There is likely something we could do to make LockFileParser faster, but the work likely won’t be worth the time spent. There isn’t much we can do to make this file faster without caching using marshalling the data or something.">
+<meta name="twitter:image" content="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.50.46 PM.png">
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://localhost:4000/"/>
+
+
+
+
+
+  <title>bundler/lockfile_parser.rb</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"> <div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Julian's Notes</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            Home
+          </a>
+        </li>
+      
+        
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+<div id="posts" class="posts-expand">
+  
+  
+
+  
+
+  
+  
+  
+
+  <article class="post post-type- " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://localhost:4000/computers/ruby/bundler/2017/03/27/lockfile_parser/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Julian Nadeau">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="assets/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Julian's Notes">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+          
+          
+            bundler/lockfile_parser.rb
+          
+        </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-03-27T16:50:50-04:00">
+                2017-03-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/category/#/computers" itemprop="url" rel="index">
+                    <span itemprop="name">computers</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/category/#/ruby" itemprop="url" rel="index">
+                    <span itemprop="name">ruby</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+                
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/category/#/bundler" itemprop="url" rel="index">
+                    <span itemprop="name">bundler</span>
+                  </a>
+                </span>
+
+                
+                
+                  , 
+                
+              
+            </span>
+          
+
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Reading time</span>
+                
+                <span title="Reading time">
+                  7
+                </span>
+              
+            </div>
+          
+
+          
+            
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <!---
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: initialize
+   dateFormat  s.SSS
+
+   "@platforms    = []" :a1, 0.000, 0.001
+   "@sources      = []" :a1, 0.001, 0.002
+   "@dependencies = []" :a1, 0.002, 0.003
+   "@state        = nil" :a1, 0.003, 0.004
+   "@specs        = {}" :a1, 0.004, 0.005
+   "@rubygems_aggregate = Source::Rubygems.new" :a1, 0.005, 0.006
+   "if lockfile.match(/<<<<<<<|=======|>>>>>>>|\|\|\|\|\|\|\|/)" :a1, 0.006, 0.007
+   "lockfile.split(/(?:\r?\n)+/).each do |line|" :a1, 0.007, 0.008
+   "if SOURCE.include?(line) (run 1445 times)" :a1, 0.008, 0.010
+   "@state = :source (run 72 times)" :a1, 0.010, 0.011
+   "parse_source(line) (run 72 times)" :a1, 0.011, 0.012
+   "elsif line == DEPENDENCIES (run 1373 times)" :a1, 0.012, 0.014
+   "elsif line == PLATFORMS (run 1372 times)" :a1, 0.014, 0.016
+   "elsif line == RUBY (run 1371 times)" :a1, 0.016, 0.018
+   "elsif line == BUNDLED (run 1371 times)" :a1, 0.018, 0.020
+   "elsif line =~ /^[^\s]/ (run 1370 times)" :a1, 0.020, 0.025
+   "elsif @state (run 1370 times)" :a1, 0.025, 0.027
+   "send('parse_{@state}', line) (run 1370 times)" :a1, 0.027, 0.077
+   "@state = :platform" :a1, 0.077, 0.078
+   "@state = :dependency" :a1, 0.078, 0.079
+   "@state = :bundled_with" :a1, 0.079, 0.080
+   "@sources << @rubygems_aggregate" :a1, 0.080, 0.081
+   "@specs = @specs.values.sort_by(&:identifier)" :a1, 0.081, 0.090
+   "warn_for_outdated_bundler_version" :a1, 0.090, 0.091
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.50.46 PM.png" alt="diagram image" width="100%" /></p>
+
+<p>Here, we see that <code class="highlighter-rouge">parse_#{@state}</code> is the bulk of the work. This is a dynamic call to parse methods… is any one of them slower than another?</p>
+
+<p>To solve this, I split out the dynamic line into a case statement to see which lines were being called.</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code>elseif @state
+<span class="gi">+ case @state.to_s
++ when 'source'
++     parse_source(line)
++ when 'dependency'
++     parse_dependency(line)
++ when 'spec'
++     parse_spec(line)
++ when 'platform'
++     parse_platform(line)
++ when 'bundled_with'
++     parse_bundled_with(line)
++ when 'ruby'
++     parse_ruby(line)
++ else
++     send("parse_#{@state}", line)
++ end
+</span><span class="gd">- send("parse_#{@state}", line)   
+</span>end
+</code></pre></div></div>
+
+<p>By the diagram below, we can see the following from our case statement:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>parse_state</th>
+      <th>number</th>
+      <th>time</th>
+      <th> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>parse_source</td>
+      <td>1131 times</td>
+      <td>32ms</td>
+      <td><code class="highlighter-rouge">SOURCE</code> did not include line, so it went to the case statement</td>
+    </tr>
+    <tr>
+      <td>parse_platform</td>
+      <td>1 time</td>
+      <td>1 ms</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>parse_dependency</td>
+      <td>237 times</td>
+      <td>15 ms</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>parse_bundled_with</td>
+      <td>1 time</td>
+      <td>1 ms</td>
+      <td>-</td>
+    </tr>
+  </tbody>
+</table>
+
+<!---
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: initialize
+   dateFormat  s.SSS
+
+   "@platforms    = []" :a1, 0.000, 0.001
+   "@sources      = []" :a1, 0.001, 0.002
+   "@dependencies = []" :a1, 0.002, 0.003
+   "@state        = nil" :a1, 0.003, 0.004
+   "@specs        = {}" :a1, 0.004, 0.005
+   "@rubygems_aggregate = Source::Rubygems.new" :a1, 0.005, 0.006
+   "if lockfile.match(/<<<<<<<|=======|>>>>>>>|\|\|\|\|\|\|\|/)" :a1, 0.006, 0.007
+   "lockfile.split(/(?:\r?\n)+/).each do |line|" :a1, 0.007, 0.008
+   "if SOURCE.include?(line) (run 1445 times)" :a1, 0.008, 0.012
+   "@state = :source (run 72 times)" :a1, 0.012, 0.013
+   "parse_source(line) (run 72 times)" :a1, 0.013, 0.014
+   "elsif line == DEPENDENCIES (run 1373 times)" :a1, 0.014, 0.015
+   "elsif line == PLATFORMS (run 1372 times)" :a1, 0.015, 0.017
+   "elsif line == RUBY (run 1371 times)" :a1, 0.017, 0.019
+   "elsif line == BUNDLED (run 1371 times)" :a1, 0.019, 0.021
+   "elsif line =~ /^[^\s]/ (run 1370 times)" :a1, 0.021, 0.024
+   "elsif @state (run 1370 times)" :a1, 0.024, 0.026
+   "case @state.to_s (run 1370 times)" :a1, 0.026, 0.029
+   "parse_source(line) (run 1131 times)" :a1, 0.029, 0.061
+   "@state = :platform" :a1, 0.061, 0.062
+   "parse_platform(line)" :a1, 0.062, 0.063
+   "@state = :dependency" :a1, 0.063, 0.064
+   "parse_dependency(line) (run 237 times)" :a1, 0.064, 0.079
+   "@state = :bundled_with" :a1, 0.079, 0.080
+   "parse_bundled_with(line)" :a1, 0.080, 0.081
+   "@sources << @rubygems_aggregate" :a1, 0.081, 0.082
+   "@specs = @specs.values.sort_by(&:identifier)" :a1, 0.082, 0.093
+   "warn_for_outdated_bundler_version" :a1, 0.093, 0.094
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.46.45 PM.png" alt="diagram image" width="100%" /></p>
+
+<hr />
+
+<h2 id="parse_source">parse_source</h2>
+
+<!---
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: parse_source
+   dateFormat  s.SSS
+
+   "case line (run 1203 times)" :a1, 0.000, 0.003
+   "@current_source = nil (run 72 times)" :a1, 0.003, 0.004
+   "@opts = {} (run 72 times)" :a1, 0.004, 0.005
+   "@type = line (run 72 times)" :a1, 0.005, 0.006
+   "value = $2 (run 205 times)" :a1, 0.006, 0.007
+   "value = true if value == 'true' (run 205 times)" :a1, 0.007, 0.008
+   "value = false if value == 'false' (run 205 times)" :a1, 0.008, 0.009
+   "key = $1 (run 205 times)" :a1, 0.009, 0.010
+   "if @opts[key] (run 205 times)" :a1, 0.010, 0.011
+   "@opts[key] = value (run 205 times)" :a1, 0.011, 0.014
+   "case @type (run 72 times)" :a1, 0.014, 0.015
+   "@current_source = TYPES[@type].from_lock(@opts) (run 71 times)" :a1, 0.015, 0.016
+   "if @sources.include?(@current_source) (run 71 times)" :a1, 0.016, 0.017
+   "@sources << @current_source (run 71 times)" :a1, 0.017, 0.018
+   "parse_spec(line) (run 854 times)" :a1, 0.018, 0.057
+   "Array(@opts['remote']).each do |url|" :a1, 0.057, 0.058
+   "@rubygems_aggregate.add_remote(url)" :a1, 0.058, 0.059
+   "@current_source = @rubygems_aggregate" :a1, 0.059, 0.060
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.47.00 PM.png" alt="diagram image" width="100%" /></p>
+
+<p><code class="highlighter-rouge">parse_spec</code> is the obvious bulk of this method, so let’s also look there.</p>
+
+<hr />
+
+<h2 id="parse_spec">parse_spec</h2>
+
+<p>The parse spec code looks like so:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">parse_spec</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">line</span> <span class="o">=~</span> <span class="no">NAME_VERSION_4</span>
+    <span class="nb">name</span> <span class="o">=</span> <span class="vg">$1</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="vg">$2</span>
+    <span class="n">platform</span> <span class="o">=</span> <span class="vg">$3</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Version</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+    <span class="n">platform</span> <span class="o">=</span> <span class="n">platform</span> <span class="p">?</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Platform</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span> <span class="p">:</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Platform</span><span class="o">::</span><span class="no">RUBY</span>
+    <span class="vi">@current_spec</span> <span class="o">=</span> <span class="no">LazySpecification</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">platform</span><span class="p">)</span>
+    <span class="vi">@current_spec</span><span class="p">.</span><span class="nf">source</span> <span class="o">=</span> <span class="vi">@current_source</span>
+
+    <span class="c1"># Avoid introducing multiple copies of the same spec (caused by</span>
+    <span class="c1"># duplicate GIT sections)</span>
+    <span class="vi">@specs</span><span class="p">[</span><span class="vi">@current_spec</span><span class="p">.</span><span class="nf">identifier</span><span class="p">]</span> <span class="o">||=</span> <span class="vi">@current_spec</span>
+  <span class="k">elsif</span> <span class="n">line</span> <span class="o">=~</span> <span class="no">NAME_VERSION_6</span>
+    <span class="nb">name</span> <span class="o">=</span> <span class="vg">$1</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="vg">$2</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">version</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="s2">","</span><span class="p">).</span><span class="nf">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:strip</span><span class="p">)</span> <span class="k">if</span> <span class="n">version</span>
+    <span class="n">dep</span> <span class="o">=</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Dependency</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="vi">@current_spec</span><span class="p">.</span><span class="nf">dependencies</span> <span class="o">&lt;&lt;</span> <span class="n">dep</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>It takes about 15-17ms to run all of it. I’d like to see how often each part is called.</p>
+
+<ul>
+  <li>NAME_VERSION_4, called 374 times, took about 7ms</li>
+  <li>NAME_VERSION_6, called 480 times, took about 8ms</li>
+</ul>
+
+<p>Which means they take equally as long, but the NAME_VERSION_4 option is slower taking about 0.000044s for each run as opposed to 0.000035s for each run.</p>
+
+<p>So, what is the difference between these two? Well NAME_VERSION_4 is a top level dependency, whereas NAME_VERSION_6 is a sub-dependency, it seems.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">4</span>     <span class="n">web</span><span class="o">-</span><span class="n">console</span> <span class="p">(</span><span class="mf">3.4</span><span class="o">.</span><span class="mi">0</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">actionview</span> <span class="p">(</span><span class="o">&gt;=</span> <span class="mf">5.0</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">activemodel</span> <span class="p">(</span><span class="o">&gt;=</span> <span class="mf">5.0</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">debug_inspector</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">railties</span> <span class="p">(</span><span class="o">&gt;=</span> <span class="mf">5.0</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">4</span>     <span class="n">webmock</span> <span class="p">(</span><span class="mf">2.3</span><span class="o">.</span><span class="mi">2</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">addressable</span> <span class="p">(</span><span class="o">&gt;=</span> <span class="mf">2.3</span><span class="o">.</span><span class="mi">6</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">crack</span> <span class="p">(</span><span class="o">&gt;=</span> <span class="mf">0.3</span><span class="o">.</span><span class="mi">2</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">hashdiff</span>
+</code></pre></div></div>
+
+<p>So what does this actually do? Seems it resolves specifications from the lockfile. The “4 space” (NAME VERSION 4) seems to also load a current spec, which I don’t quite get. Seems we re-assign this class level variable a lot to avoid passing it around.</p>
+
+<!--
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: parse_spec
+   dateFormat  s.SSS
+
+   "if line =~ NAME_VERSION_4 (run 854 times)" :a1, 0.000, 0.004
+   "name = $1 (run 374 times)" :a1, 0.004, 0.005
+   "version = $2 (run 374 times)" :a1, 0.005, 0.006
+   "platform = $3 (run 374 times)" :a1, 0.006, 0.007
+   "version = Gem::Version.new(version) (run 374 times)" :a1, 0.007, 0.009
+   "platform = platform ? Gem::Platform.new(platform) : Gem::Platform::RUBY (run 374 times)" :a1, 0.009, 0.010
+   "@current_spec = LazySpecification.new(name  version  platform) (run 374 times)" :a1, 0.010, 0.013
+   "@current_spec.source = @current_source (run 374 times)" :a1, 0.013, 0.014
+   "elsif line =~ NAME_VERSION_6 (run 480 times)" :a1, 0.014, 0.016
+   "name = $1 (run 480 times)" :a1, 0.016, 0.018
+   "version = $2 (run 480 times)" :a1, 0.018, 0.019
+   "version = version.split(' ').map(&:strip) if version (run 480 times)" :a1, 0.019, 0.021
+   "dep = Gem::Dependency.new(name  version) (run 480 times)" :a1, 0.021, 0.035
+   "@specs[@current_spec.identifier] ||= @current_spec" :a1, 0.035, 0.036
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 6.33.13 PM.png" alt="diagram image" width="100%" /></p>
+
+<p>We can see that <code class="highlighter-rouge">"dep = GemDependency.new(name  version) (run 480 times)" :a1, 0.021, 0.035</code> takes a chunk of time (14ms with gantt generation, 6ms in reality), otherwise there’s not much bulk here.</p>
+
+<hr />
+
+<p>So, in the end the reason this file is slower is that it is iterating over many sources and creating <code class="highlighter-rouge">Gem::Dependency</code> objects. There is likely something we could do to make <code class="highlighter-rouge">LockFileParser</code> faster, but the work likely won’t be worth the time spent.</p>
+
+<p>There isn’t much we can do to make this file faster without caching using marshalling the data or something.</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            
+            <a href="/tag/#/computers" rel="tag"># computers</a>
+          
+            
+            <a href="/tag/#/ruby" rel="tag"># ruby</a>
+          
+            
+            <a href="/tag/#/bundler" rel="tag"># bundler</a>
+          
+        </div>
+      
+
+      
+      
+      
+      
+      
+
+      
+      
+        <div class="post-nav" id="post-nav-id">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/finance/2017/04/02/bollinger_band/" rel="next" title="Bollinger Band">
+                <i class="fa fa-chevron-left"></i> Bollinger Band
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/computers/ruby/bundler/2017/03/27/definition/" rel="prev" title="bundler/definition.rb">
+                bundler/definition.rb <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+      
+
+      
+    </footer>
+  </article>
+
+  <div class="post-spread">
+    
+  </div>
+</div>
+
+
+          </div>
+          
+
+
+          
+
+        </div>
+        
+          
+
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+        
+        
+        
+
+
+
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/assets/images/avatar.gif"
+               alt="Julian Nadeau" />
+          <p class="site-author-name" itemprop="name">Julian Nadeau</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-name">posts</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">categories</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">tags</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+        
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+
+
+
+
+            
+              <div class="post-toc-content">
+    <ol class=nav>
+      <li class="nav-item nav-level-2"> <a class="nav-link" href="#parse_source"> <span class="nav-number">1</span> <span class="nav-text">parse_source</span> </a> <ol class="nav-child"> <ol class="nav-child"> <ol class="nav-child"> <ol class="nav-child"> </li></ol> </li></ol> </li></ol> </li></ol> </li> <li class="nav-item nav-level-2"> <a class="nav-link" href="#parse_spec"> <span class="nav-number">2</span> <span class="nav-text">parse_spec</span> </a> <ol class="nav-child"> <ol class="nav-child"> <ol class="nav-child"> <ol class="nav-child">
+    </ol>
+  </div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Julian Nadeau</span>
+</div>
+
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="https://jekyllrb.com">Jekyll</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="https://github.com/simpleyyt/jekyll-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+   
+  
+  
+  
+  
+  
+  <script type="text/javascript" src="/assets/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+  
+  
+  
+  <script type="text/javascript" src="/assets/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  
+  
+  
+  
+  <script type="text/javascript" src="/assets/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  
+  
+  
+  
+  <script type="text/javascript" src="/assets/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  
+  
+  
+  
+  <script type="text/javascript" src="/assets/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  
+  
+  
+  
+  <script type="text/javascript" src="/assets/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/assets/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/assets/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+  <script type="text/javascript" src="/assets/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/assets/js/src/post-details.js?v=5.1.1"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/assets/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+  
+
+    
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
+

@@ -1,0 +1,2788 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+    <entry>
+      <title><![CDATA[Developer Productivity]]></title>
+      <url>/computers/dev_productivity/2018/01/03/dev_productivity/</url>
+      <content type="html"><![CDATA[<p>Developer Productivity can be described as a concept, set of tools or processes, or a team that is dedicated to enhancing the efficiency of other developers.</p>
+
+<p>This concept is spread throughout different companies, mostly with a focus on a few key areas. Unfortunately, the developers at different companies don’t seem to discuss, have meet-ups, or work together on their allied goals.</p>
+
+<p>Developer productivity is not a business concern nor is most of the work confidential. The work is generally generic and the concepts are easily shared and discussed. Over the course of many meetings with similar teams at other companies, it became obvious that we’re all duplicating each others’ work and more drastically, duplicating the exploration.</p>
+
+<h2 id="phase-i">Phase I</h2>
+
+<p>Phase I is simply the initial foundation of the community. The Slack channel, invitations at https://chat.devproductivity.io, is a good first step towards an initial foundation.</p>
+
+<p>As we grow the audience, we can start to hold online meet-ups. The first one is currently scheduled for sometime in January 2018.</p>
+
+<p>These simple ideas will allow us to start to grow a community and provide the foundations to introduce work on additional phases of the project.</p>
+
+<p><strong>Success Criteria:</strong> The community starts to grow and people remain excited. There is a decent turnout for the online meet-ups and people are asking what comes next.</p>
+
+<h2 id="phase-ii">Phase II</h2>
+
+<p>There is no current ground work laid to bootstrap a community dedicated to developer productivity. This means that we have the opportunity to create this community and share the work we do with each other.</p>
+
+<p>https://devproductivity.io will be a central hub managed by the community. With links to content about continuous integration and testing, automation, operational excellence, developer environments, mobile tooling, and other aspects of developer productivity - this website will be a central location on which to grow a solid foundation.</p>
+
+<p>This website/community allows us to draw talent and work from the larger pool of engineers working on the same goals, it also allows us to share our ideas, and educate the larger developer community about standard goals.</p>
+
+<p><strong>Success Criteria:</strong> The community gets excited about the website and we start to see traffic pick up. The community will start to become more involved and take ownership of parts of the content once the initial site is launched.</p>
+
+<h2 id="phase-iii">Phase III</h2>
+
+<p>As we grow, online meet-ups will likely not scale. The website will need more community to continue to scale and continue to be a place that people frequent.</p>
+
+<p>In Phase III, we hold our first conference. Development has had conferences of so many varieties, but there has never been a conference dedicated to the concepts that form developer productivity.</p>
+
+<p>By holding the conference, we aim to become a driving force behind Developer Productivity and increase community knowledge and commitment to this community.</p>
+
+<p><strong>Success Criteria:</strong> We see excitement and participation. The website and the content continues to increase in traffic and a vibrant community is formed.</p>
+
+<h2 id="phase-n">Phase N</h2>
+
+<p>We may not need to go much further than a conference. If these phases are successful, we may have found a recipe to continue to grow and continue to be a power house in the developer productivity community.</p>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> dev_productivity </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> dev_productivity </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Experimental Rewrite]]></title>
+      <url>/computers/ruby/bundler/experiment/2017/04/05/experimental_rewrite/</url>
+      <content type="html"><![CDATA[<p>MVP includes:</p>
+
+<ul>
+  <li>gem support</li>
+  <li>source support</li>
+  <li>group support</li>
+</ul>
+
+<h2 id="bundle-install">bundle install</h2>
+
+<!---
+```diagram
+graph TD
+ bundle_install[bundle install]-\->compare[Gemfile == Gemfile.lock]
+ compare--yes-\->makesure[are all gems in lockfile installed?]
+ makesure--yes-\->done
+ makesure--no-\->install[install missing gems]
+ install-\->makesure
+ compare--no-\->resolve[resolve differences to Gemfile.lock]
+ resolve-\->makesure
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/6b39bed85de3d3cb24187e43db6e5a90.png" alt="diagram image" height="400" /></p>
+
+<p>This is a very naive approach as it doesn’t really take into account resolving nested dependencies in gemspecs.</p>
+
+<p>The <code class="highlighter-rouge">lockfile</code> is consisted of a very simple file in the following format for easy parsing:</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>checksum 12345abcdef
+gem_name gem_version
+gem_name gem_version
+gem_name gem_version
+gem_name gem_version
+</code></pre></div></div>
+
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+          <category> bundler </category>
+        
+          <category> experiment </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+          <tag> bundler </tag>
+        
+          <tag> experiment </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[load_breakdown]]></title>
+      <url>/computers/ruby/bundler/2017/04/05/load_breakdown/</url>
+      <content type="html"><![CDATA[<h2 id="load-breakdown">Load Breakdown</h2>
+
+<!---
+```diagram
+graph TD
+  load.setup
+  load.setup-\->load_method[load]
+  load.setup--663ms-\->setup
+
+  subgraph lib/bundler/runtime.rb
+    requested_specs
+  end
+  setup--630ms-\->requested_specs
+
+  subgraph lib/bundler/definition.rb
+    requested_specs--368ms-\->specs_for
+    specs_for--248ms-\->specs1[specs]
+    specs_for--121ms-\->spec.for
+  end
+
+  subgraph lib/bundler/spec_set.rb
+    specs1--168ms-\->materialize
+    spec.for--106ms-\->spec.dependencies
+
+  end
+
+  subgraph stub_specification.rb
+    spec.dependencies--104ms-\->dependencies
+  end
+
+  subgraph lib/bundler/lazy_specification.rb
+    materialize--157ms-\->__materialize__
+    __materialize__--137ms-\->specs2[specs]
+    __materialize__--12ms-\->search
+    specs2--34ms-\->RubyGemsSpecs[RubyGems Specs]
+    specs2--91ms-\->GitSpecs[Git Specs]
+  end
+
+  subgraph RUBY/rubygems/specifications.rb
+    RubyGemsSpecs-\->load
+    load-\->eval[eval code, binding, file]
+    dependencies--104ms-\->gem_dependencies[dependencies]
+  end
+
+  subgraph lib/bundler/source/path.rb
+    GitSpecs--90ms-\->load_spec_files
+    load_spec_files--18ms-\->glob[Dir.glob]
+  end
+
+  subgraph lib/bundler.rb
+    load_spec_files--69ms-\->load_gemspec
+    load_gemspec--67ms-\->load_gemspec_uncached
+    load_gemspec_uncached--55ms-\->eval_gemspec
+  end
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/644eeff0ba582535065a98cf941ae6bc.png" alt="diagram image" width="100%" /></p>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+          <category> bundler </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+          <tag> bundler </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[RubyGems]]></title>
+      <url>/computers/ruby/bundler/2017/04/05/ruby_gems/</url>
+      <content type="html"><![CDATA[<h2 id="specification">Specification</h2>
+
+<!---
+```diagram
+gantt
+   title file: /opt/rubies/2.3.3/lib/ruby/site_ruby/2.3.0/rubygems/specification.rb method: load
+   numberFormat  %.2f
+
+   "_spec = LOAD_CACHE[file] (run 296 times)" :a1, 0.000, 0.728
+   "return _spec if _spec (run 295 times)" :a1, 0.728, 1.456
+   "file = file.dup.untaint (run 295 times)" :a1, 1.456, 2.183
+   "return unless File.file?(file) (run 295 times)" :a1, 2.183, 2.911
+   "code = if defined? Encoding (run 295 times)" :a1, 2.911, 3.639
+   "File.read file  :mode => 'r:UTF-8:-' (run 295 times)" :a1, 3.639, 4.367
+   "code.untaint (run 295 times)" :a1, 4.367, 5.095
+   "begin (run 295 times)" :a1, 5.095, 5.823
+   "_spec = eval code  binding  file (run 295 times)" :a1, 5.823, 97.089
+   "if Gem::Specification === _spec (run 295 times)" :a1, 97.089, 97.817
+   "_spec.loaded_from = File.expand_path file.to_s (run 295 times)" :a1, 97.817, 98.544
+   "LOAD_CACHE[file] = _spec (run 295 times)" :a1, 98.544, 99.272
+   "return _spec" :a1, 99.272, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/f50cd68abdc716c81b609381352d8c7e.png" alt="diagram image" width="100%" /></p>
+
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+          <category> bundler </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+          <tag> bundler </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[load]]></title>
+      <url>/computers/ruby/bundler/2017/04/03/load/</url>
+      <content type="html"><![CDATA[<h2 id="initialize">initialize</h2>
+
+<p>A quick look at <code class="highlighter-rouge">load.setup</code> shows us that the <code class="highlighter-rouge">load</code> method takes a small amount of time <code class="highlighter-rouge">0.0016739999991841614s</code>. This means the bulk of the time is spent in <code class="highlighter-rouge">setup</code>.</p>
+
+<h2 id="setup">setup</h2>
+
+<p>This method took about <code class="highlighter-rouge">0.6628200000268407s</code> to run.</p>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/runtime.rb method: setup
+   numberFormat  %.2f
+
+   "groups.map!(&:to_sym)" :a1, 0.000, 0.151
+   "clean_load_path" :a1, 0.151, 0.302
+   "specs = groups.any? ? @definition.specs_for(groups) : requested_specs" :a1, 0.302, 85.592
+   "SharedHelpers.set_bundle_environment" :a1, 85.592, 85.743
+   "Bundler.rubygems.replace_entrypoints(specs)" :a1, 85.743, 90.408
+   "load_paths = specs.map do |spec|" :a1, 90.408, 90.559
+   "unless spec.loaded_from (run 375 times)" :a1, 90.559, 90.710
+   "if (activated_spec = Bundler.rubygems.loaded_specs(spec.name)) && activated_spec.version != spec.version (run 375 times)" :a1, 90.710, 90.861
+   "Bundler.rubygems.mark_loaded(spec) (run 375 times)" :a1, 90.861, 91.012
+   "spec.load_paths.reject {|path| $LOAD_PATH.include?(path) } (run 804 times)" :a1, 91.012, 91.163
+   "if insert_index = Bundler.rubygems.load_path_insert_index" :a1, 91.163, 91.314
+   "$LOAD_PATH.insert(insert_index  *load_paths)" :a1, 91.314, 91.465
+   "setup_manpath" :a1, 91.465, 93.292
+   "lock(:preserve_unknown_sections => true)" :a1, 93.292, 99.849
+   "self" :a1, 99.849, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/07e884f69afd901b12c0b51a28ef09f6.png" alt="diagram image" width="100%" /></p>
+
+<p>As we can see, <code class="highlighter-rouge">specs = groups.any? ? @definition.specs_for(groups) : requested_specs</code> takes the most time (about 85% of the time).</p>
+
+<p>Let’s break that down a bit. I’ll just change the turnary to an if/else and see what that produces.</p>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/runtime.rb method: setup
+   numberFormat  %.2f
+
+   "groups.map!(&:to_sym)" :a1, 0.000, 0.145
+   "clean_load_path" :a1, 0.145, 0.290
+   "specs = if groups.any?" :a1, 0.290, 0.435
+   "requested_specs" :a1, 0.435, 82.871
+   "SharedHelpers.set_bundle_environment" :a1, 82.871, 83.016
+   "Bundler.rubygems.replace_entrypoints(specs)" :a1, 83.016, 88.346
+   "load_paths = specs.map do |spec|" :a1, 88.346, 88.491
+   "unless spec.loaded_from (run 375 times)" :a1, 88.491, 88.636
+   "if (activated_spec = Bundler.rubygems.loaded_specs(spec.name)) && activated_spec.version != spec.version (run 375 times)" :a1, 88.636, 88.780
+   "Bundler.rubygems.mark_loaded(spec) (run 375 times)" :a1, 88.780, 88.925
+   "spec.load_paths.reject {|path| $LOAD_PATH.include?(path) } (run 804 times)" :a1, 88.925, 89.070
+   "if insert_index = Bundler.rubygems.load_path_insert_index" :a1, 89.070, 89.215
+   "$LOAD_PATH.insert(insert_index  *load_paths)" :a1, 89.215, 89.360
+   "setup_manpath" :a1, 89.360, 91.577
+   "lock(:preserve_unknown_sections => true)" :a1, 91.577, 99.855
+   "self" :a1, 99.855, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/615f1c41da348502c193e68959692a37.png" alt="diagram image" width="100%" /></p>
+
+<p>As we can see, <code class="highlighter-rouge">@definition.specs_for(groups)</code> is not even called. All the time is spent in <code class="highlighter-rouge">requested_specs</code>.</p>
+
+<h2 id="requested_specs">requested_specs</h2>
+
+<p>It seems this delegates to <code class="highlighter-rouge">definition</code>.</p>
+
+<p>In <code class="highlighter-rouge">definition</code>, this is the result:</p>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: requested_specs
+   numberFormat  %.2f
+
+   "end" :a1, 0.000, 0.173
+   "groups = requested_groups" :a1, 0.173, 0.345
+   "groups.map!(&:to_sym)" :a1, 0.345, 0.518
+   "specs_for(groups)" :a1, 0.518, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/58d1e97c0e200461c936baaa53e3dafe.png" alt="diagram image" width="100%" /></p>
+
+<p>Let’s look at <code class="highlighter-rouge">specs_for</code></p>
+
+<h2 id="specs_for">specs_for</h2>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs_for
+   numberFormat  %.2f
+
+   "deps = dependencies.select {|d| (d.groups & groups).any? } (run 238 times)" :a1, 0.000, 0.152
+   "deps.delete_if {|d| !d.should_include? } (run 238 times)" :a1, 0.152, 0.305
+   "specs.for(expand_dependencies(deps))" :a1, 0.305, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/787a9e70bd8caab794f9928d1c62ddd8.png" alt="diagram image" width="100%" /></p>
+
+<p><code class="highlighter-rouge">specs.for(expand_dependencies(deps))</code> takes the most time, but is it the <code class="highlighter-rouge">specs.for</code> part, or the <code class="highlighter-rouge">expand_dependencies</code> part?</p>
+
+<p>It is the <code class="highlighter-rouge">specs.for</code> part:</p>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs_for
+   numberFormat  %.2f
+
+   "deps = dependencies.select {|d| (d.groups & groups).any? } (run 238 times)" :a1, 0.000, 0.167
+   "deps.delete_if {|d| !d.should_include? } (run 238 times)" :a1, 0.167, 0.334
+   "d = expand_dependencies(deps)" :a1, 0.334, 0.854
+   "specs.for(d)" :a1, 0.854, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/25a37703789441a3502a3f0cac608356.png" alt="diagram image" width="100%" /></p>
+
+<h2 id="specsfor">specs.for</h2>
+
+<!---
+```diagram
+gantt
+   title file: /development/opensource/bundler/lib/bundler/spec_set.rb method: for
+   numberFormat  %.2f
+
+   "handled = {} (run 4 times)" :a1, 0.000, 0.923
+   "deps = dependencies.dup (run 4 times)" :a1, 0.923, 1.847
+   "specs = [] (run 4 times)" :a1, 1.847, 2.770
+   "skip += ['bundler'] (run 4 times)" :a1, 2.770, 3.693
+   "loop do (run 4 times)" :a1, 3.693, 4.617
+   "break unless dep = deps.shift (run 1834 times)" :a1, 4.617, 5.540
+   "if spec = lookup['bundler'].first (run 4 times)" :a1, 5.540, 6.463
+   "next if handled[dep] || skip.include?(dep.name) (run 1830 times)" :a1, 6.463, 7.387
+   "handled[dep] = true (run 1821 times)" :a1, 7.387, 8.310
+   "if spec = spec_for_dependency(dep  match_current_platform) (run 1821 times)" :a1, 8.310, 9.234
+   "specs << spec (run 1821 times)" :a1, 9.234, 10.157
+   "spec.dependencies.each do |d| (run 1821 times)" :a1, 10.157, 95.383
+   "next if d.type == :development (run 28 times)" :a1, 95.383, 96.307
+   "d = DepProxy.new(d  dep.__platform) unless match_current_platform (run 27 times)" :a1, 96.307, 97.230
+   "deps << d (run 27 times)" :a1, 97.230, 98.153
+   "specs << spec" :a1, 98.153, 99.077
+   "check ? true : SpecSet.new(specs)" :a1, 99.077, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/2e6f41664c612288598541f69ed6d7ce.png" alt="diagram image" width="100%" /></p>
+
+<h2 id="specs">specs</h2>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs_for
+   numberFormat  %.2f
+
+   "deps = dependencies.select {|d| (d.groups & groups).any? } (run 238 times)" :a1, 0.000, 0.165
+   "deps.delete_if {|d| !d.should_include? } (run 238 times)" :a1, 0.165, 0.330
+   "d = expand_dependencies(deps)" :a1, 0.330, 0.836
+   "s = specs" :a1, 0.836, 75.406
+   "s.for(d)" :a1, 75.406, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/1e0e32865dd876d5e30abcfb8a5720e9.png" alt="diagram image" width="100%" /></p>
+
+<p>As we can see, about 3/4 of the time is spent making the specs, and 1/4 of the time processing with <code class="highlighter-rouge">for</code>.</p>
+
+<h2 id="specs-1">specs</h2>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs
+   numberFormat  %.2f
+
+   "end" :a1, 0.000, 0.223
+   "begin" :a1, 0.223, 0.445
+   "specs = resolve.materialize(Bundler.settings[:cache_all_platforms] ? dependencies : requested_dependencies)" :a1, 0.445, 92.952
+   "unless specs['bundler'].any?" :a1, 92.952, 95.996
+   "local = Bundler.settings[:frozen] ? rubygems_index : index" :a1, 95.996, 99.286
+   "bundler = local.search(Gem::Dependency.new('bundler'  VERSION)).last" :a1, 99.286, 99.555
+   "specs['bundler'] = bundler if bundler" :a1, 99.555, 99.777
+   "specs" :a1, 99.777, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/d5e1e5092bb91951c29c59dc88ad2c72.png" alt="diagram image" width="100%" /></p>
+
+<p>This line does quite a lot (<code class="highlighter-rouge">resolve.materialize(Bundler.settings[:cache_all_platforms] ? dependencies : requested_dependencies)</code>), so let’s split it up.</p>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/definition.rb method: specs
+   numberFormat  %.2f
+
+   "end" :a1, 0.000, 0.222
+   "begin" :a1, 0.222, 0.444
+   "r = resolve" :a1, 0.444, 37.415
+   "deps = if Bundler.settings[:cache_all_platforms]" :a1, 37.415, 37.637
+   "requested_dependencies" :a1, 37.637, 37.859
+   "specs = r.materialize(deps)" :a1, 37.859, 93.610
+   "unless specs['bundler'].any?" :a1, 93.610, 96.213
+   "local = Bundler.settings[:frozen] ? rubygems_index : index" :a1, 96.213, 99.286
+   "bundler = local.search(Gem::Dependency.new('bundler'  VERSION)).last" :a1, 99.286, 99.556
+   "specs['bundler'] = bundler if bundler" :a1, 99.556, 99.778
+   "specs" :a1, 99.778, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/a4abdd379f1207b63fab6d37ec66088a.png" alt="diagram image" width="100%" /></p>
+
+<p>As we can see, <code class="highlighter-rouge">resolve</code> and <code class="highlighter-rouge">materialize</code> take the most time.</p>
+
+<hr />
+
+<h2 id="materializing">Materializing</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>line</th>
+      <th>num_calls</th>
+      <th>time (s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>resolve</td>
+      <td>73</td>
+      <td>0.05524000007426366</td>
+    </tr>
+    <tr>
+      <td>materialize</td>
+      <td>1</td>
+      <td>0.1665900000371039</td>
+    </tr>
+    <tr>
+      <td><strong>materialize</strong></td>
+      <td>374</td>
+      <td>0.15040999941993505</td>
+    </tr>
+    <tr>
+      <td>specs</td>
+      <td>374</td>
+      <td>0.13627100008307025</td>
+    </tr>
+    <tr>
+      <td>rubygems spec</td>
+      <td>296</td>
+      <td>0.03416500013554469</td>
+    </tr>
+    <tr>
+      <td>git specs</td>
+      <td>293</td>
+      <td>0.09133500000461936</td>
+    </tr>
+    <tr>
+      <td>search</td>
+      <td>596</td>
+      <td>0.012452999944798648</td>
+    </tr>
+  </tbody>
+</table>
+
+<!---
+```diagram
+graph TD
+  materialize -- 150ms -\-> __materialize__
+  __materialize__ -- 136ms -\-> specs
+  
+  subgraph __materialize__
+    specs -- 34ms -\-> rubygems_specs[RubyGems specs]
+    specs -- 91ms -\-> git_specs[Git Specs]
+    __materialize__ -- 12ms -\-> search
+  end
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/005fba5b5ad80e50382313df2a1f4aaf.png" alt="diagram image" height="400" /></p>
+
+<h2 id="git-based-specs">git-based specs</h2>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler/source/path.rb method: load_spec_files
+   numberFormat  %.2f
+
+   "index = Index.new (run 71 times)" :a1, 0.000, 0.922
+   "if File.directory?(expanded_path) (run 71 times)" :a1, 0.922, 8.775
+   "Dir['#{expanded_path}/#{@glob}'].sort_by {|p| -p.split(File::SEPARATOR).size }.each do |file| (run 153 times)" :a1, 8.775, 23.952
+   "next unless spec = Bundler.load_gemspec(file) (run 82 times)" :a1, 23.952, 94.468
+   "spec.source = self (run 82 times)" :a1, 94.468, 95.390
+   "Bundler.rubygems.set_installed_by_version(spec) (run 82 times)" :a1, 95.390, 96.312
+   "validate_spec(spec) (run 82 times)" :a1, 96.312, 97.234
+   "index << spec (run 82 times)" :a1, 97.234, 98.156
+   "if index.empty? && @name && @version (run 71 times)" :a1, 98.156, 99.078
+   "index" :a1, 99.078, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/07b61084e06c0c400a0ba5b6a548fc23.png" alt="diagram image" width="100%" /></p>
+
+<p>We can see that we load 82 gemspecs - which takes the most time. Can we cache loading those gemspecs? They aren’t going to change in between loads.</p>
+
+<p>Globbing the filesystem also takes a chunk of time (<code class="highlighter-rouge">Dir['#{expanded_path}/#{@glob}'].sort_by {|p| -p.split(File::SEPARATOR).size }</code>) - about 15% of 91ms to be exact.</p>
+
+<h2 id="load_gemspec">load_gemspec</h2>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler.rb method: load_gemspec
+   numberFormat  %.2f
+
+   "@gemspec_cache ||= {} (run 82 times)" :a1, 0.000, 1.374
+   "key = File.expand_path(file) (run 82 times)" :a1, 1.374, 2.748
+   "@gemspec_cache[key] ||= load_gemspec_uncached(file  validate) (run 82 times)" :a1, 2.748, 98.626
+   "@gemspec_cache[key].dup if @gemspec_cache[key]" :a1, 98.626, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/28b3399c87fa8b4a55749e53e1e3e3b4.png" alt="diagram image" width="100%" /></p>
+
+<h2 id="load_gemspec_uncached">load_gemspec_uncached</h2>
+
+<!---
+```diagram
+gantt
+   title file: /src/github.com/jules2689/bundler/lib/bundler.rb method: load_gemspec_uncached
+   numberFormat  %.2f
+
+   "path = Pathname.new(file) (run 82 times)" :a1, 0.000, 1.315
+   "SharedHelpers.chdir(path.dirname.to_s) do (run 82 times)" :a1, 1.315, 2.631
+   "contents = path.read (run 82 times)" :a1, 2.631, 3.946
+   "spec = if contents[0..2] == '---' # YAML header (run 82 times)" :a1, 3.946, 5.262
+   "eval_gemspec(path  contents) (run 82 times)" :a1, 5.262, 94.738
+   "return unless spec (run 82 times)" :a1, 94.738, 96.054
+   "spec.loaded_from = path.expand_path.to_s (run 82 times)" :a1, 96.054, 97.369
+   "Bundler.rubygems.validate(spec) if validate (run 82 times)" :a1, 97.369, 98.685
+   "spec" :a1, 98.685, 100.000
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/51fcc2cac0589579c867445fcd5b7dd8.png" alt="diagram image" width="100%" /></p>
+
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+          <category> bundler </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+          <tag> bundler </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Moving Average Convergence Divergence - MACD]]></title>
+      <url>/finance/2017/04/02/macd/</url>
+      <content type="html"><![CDATA[<p>It is a trend following momentum indicator showing the relationship between 2 moving averages.</p>
+
+<p>The MACD is calculated by:</p>
+
+<ul>
+  <li>subtracting the 26-day exponential moving average (EMA) from the 12-day EMA.</li>
+  <li>A 9-day EMA of the MACD is plotted on top of this.</li>
+  <li>It is used as a signal line to indicate when to buy and sell.</li>
+</ul>
+
+<p><img src="http://i.investopedia.com/inv/dictionary/terms/macd1.gif" width="300" /></p>
+
+<h2 id="interpretation">Interpretation</h2>
+
+<h3 id="crossovers">Crossovers</h3>
+
+<p>When the MACD falls below the signal line, it is a “bearish” signal which indicates that it may be time to sell.</p>
+
+<p>Conversely, when it rises above the signal line, it may indicate an upward momentum.</p>
+
+<h3 id="divergence">Divergence</h3>
+
+<p>When the price diverges from the MACD, it means the end of the current trend.</p>
+
+<h3 id="a-dramatic-rise">A Dramatic Rise</h3>
+
+<p>When the shorter term (9 day EMA) pulls away from the longer term (26 day EMA) it means that the stock is overbought and will soon return to normal levels.</p>
+
+<h3 id="other">Other</h3>
+
+<p>When the line moves above or below the zero line, this is a signal the position of the short term average relative to the long term average.</p>
+
+<p>When it is above zero, the short term average is above the long term average. This indicates upward momentum. When it is below zero, it indicates downward momentum.</p>
+]]></content>
+      <categories>
+        
+          <category> finance </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> finance </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Bollinger Band]]></title>
+      <url>/finance/2017/04/02/bollinger_band/</url>
+      <content type="html"><![CDATA[<p>Developed by John Bollinger, the Bollinger Band shows the price of the stock with an upper and lower band (standard deviation) shown with a 21-day simple moving average.</p>
+
+<p>Standard Deviation is a model of volatility.</p>
+
+<ul>
+  <li>larger volatility is presented with a larger band (more room for growth, but equally for loss)</li>
+  <li>smaller band means less volatile.</li>
+</ul>
+
+<h2 id="oversold--overbought">Oversold &amp; Overbought</h2>
+
+<p>Some people believe that:</p>
+
+<ul>
+  <li>as the price of the stock moves to the upper band == Overbought</li>
+  <li>the more it moves to the lower band == Oversold</li>
+</ul>
+
+<h2 id="the-squeeze">The Squeeze</h2>
+
+<p>When the bands contract, this is called a squeeze.</p>
+
+<ul>
+  <li>period of lower volatility</li>
+  <li>many take as a signal for future increased volatility and trading</li>
+</ul>
+
+<p>When the bands move further apart</p>
+
+<ul>
+  <li>larger risk for them to move apart again</li>
+  <li>may be a good time to exit a trade.</li>
+</ul>
+
+<p>These conditions are not trading signals. They don’t indicate when the change will take place, or the direction they’ll move.</p>
+
+<h2 id="the-math">The math</h2>
+
+<p>Bollinger Bands consist of:</p>
+
+<ul>
+  <li>an N-period moving average (MA)</li>
+  <li>an upper band at K times an N-period standard deviation above the moving average (MA + Kσ)</li>
+  <li>a lower band at K times an N-period standard deviation below the moving average (MA − Kσ)</li>
+</ul>
+
+<p>N and K are usually 20 and 2.</p>
+
+<p>Other averages can be used, such as the exponential moving average.</p>
+
+<h2 id="effectiveness">Effectiveness</h2>
+
+<p>A 2007 study that spanned from 1995 to 2005 showed no evidence of consistent performance over the standard “buy and hold” approach, but a “contrarian Bollinger Band” (reversal of the strategy) yielded positive results.</p>
+
+<p>The band may be more effective in Chinese markets.</p>
+]]></content>
+      <categories>
+        
+          <category> finance </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> finance </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[bundler/lockfile_parser.rb]]></title>
+      <url>/computers/ruby/bundler/2017/03/27/lockfile_parser/</url>
+      <content type="html"><![CDATA[<!---
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: initialize
+   dateFormat  s.SSS
+
+   "@platforms    = []" :a1, 0.000, 0.001
+   "@sources      = []" :a1, 0.001, 0.002
+   "@dependencies = []" :a1, 0.002, 0.003
+   "@state        = nil" :a1, 0.003, 0.004
+   "@specs        = {}" :a1, 0.004, 0.005
+   "@rubygems_aggregate = Source::Rubygems.new" :a1, 0.005, 0.006
+   "if lockfile.match(/<<<<<<<|=======|>>>>>>>|\|\|\|\|\|\|\|/)" :a1, 0.006, 0.007
+   "lockfile.split(/(?:\r?\n)+/).each do |line|" :a1, 0.007, 0.008
+   "if SOURCE.include?(line) (run 1445 times)" :a1, 0.008, 0.010
+   "@state = :source (run 72 times)" :a1, 0.010, 0.011
+   "parse_source(line) (run 72 times)" :a1, 0.011, 0.012
+   "elsif line == DEPENDENCIES (run 1373 times)" :a1, 0.012, 0.014
+   "elsif line == PLATFORMS (run 1372 times)" :a1, 0.014, 0.016
+   "elsif line == RUBY (run 1371 times)" :a1, 0.016, 0.018
+   "elsif line == BUNDLED (run 1371 times)" :a1, 0.018, 0.020
+   "elsif line =~ /^[^\s]/ (run 1370 times)" :a1, 0.020, 0.025
+   "elsif @state (run 1370 times)" :a1, 0.025, 0.027
+   "send('parse_{@state}', line) (run 1370 times)" :a1, 0.027, 0.077
+   "@state = :platform" :a1, 0.077, 0.078
+   "@state = :dependency" :a1, 0.078, 0.079
+   "@state = :bundled_with" :a1, 0.079, 0.080
+   "@sources << @rubygems_aggregate" :a1, 0.080, 0.081
+   "@specs = @specs.values.sort_by(&:identifier)" :a1, 0.081, 0.090
+   "warn_for_outdated_bundler_version" :a1, 0.090, 0.091
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.50.46 PM.png" alt="diagram image" width="100%" /></p>
+
+<p>Here, we see that <code class="highlighter-rouge">parse_#{@state}</code> is the bulk of the work. This is a dynamic call to parse methods… is any one of them slower than another?</p>
+
+<p>To solve this, I split out the dynamic line into a case statement to see which lines were being called.</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code>elseif @state
+<span class="gi">+ case @state.to_s
++ when 'source'
++     parse_source(line)
++ when 'dependency'
++     parse_dependency(line)
++ when 'spec'
++     parse_spec(line)
++ when 'platform'
++     parse_platform(line)
++ when 'bundled_with'
++     parse_bundled_with(line)
++ when 'ruby'
++     parse_ruby(line)
++ else
++     send("parse_#{@state}", line)
++ end
+</span><span class="gd">- send("parse_#{@state}", line)   
+</span>end
+</code></pre></div></div>
+
+<p>By the diagram below, we can see the following from our case statement:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>parse_state</th>
+      <th>number</th>
+      <th>time</th>
+      <th> </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>parse_source</td>
+      <td>1131 times</td>
+      <td>32ms</td>
+      <td><code class="highlighter-rouge">SOURCE</code> did not include line, so it went to the case statement</td>
+    </tr>
+    <tr>
+      <td>parse_platform</td>
+      <td>1 time</td>
+      <td>1 ms</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>parse_dependency</td>
+      <td>237 times</td>
+      <td>15 ms</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>parse_bundled_with</td>
+      <td>1 time</td>
+      <td>1 ms</td>
+      <td>-</td>
+    </tr>
+  </tbody>
+</table>
+
+<!---
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: initialize
+   dateFormat  s.SSS
+
+   "@platforms    = []" :a1, 0.000, 0.001
+   "@sources      = []" :a1, 0.001, 0.002
+   "@dependencies = []" :a1, 0.002, 0.003
+   "@state        = nil" :a1, 0.003, 0.004
+   "@specs        = {}" :a1, 0.004, 0.005
+   "@rubygems_aggregate = Source::Rubygems.new" :a1, 0.005, 0.006
+   "if lockfile.match(/<<<<<<<|=======|>>>>>>>|\|\|\|\|\|\|\|/)" :a1, 0.006, 0.007
+   "lockfile.split(/(?:\r?\n)+/).each do |line|" :a1, 0.007, 0.008
+   "if SOURCE.include?(line) (run 1445 times)" :a1, 0.008, 0.012
+   "@state = :source (run 72 times)" :a1, 0.012, 0.013
+   "parse_source(line) (run 72 times)" :a1, 0.013, 0.014
+   "elsif line == DEPENDENCIES (run 1373 times)" :a1, 0.014, 0.015
+   "elsif line == PLATFORMS (run 1372 times)" :a1, 0.015, 0.017
+   "elsif line == RUBY (run 1371 times)" :a1, 0.017, 0.019
+   "elsif line == BUNDLED (run 1371 times)" :a1, 0.019, 0.021
+   "elsif line =~ /^[^\s]/ (run 1370 times)" :a1, 0.021, 0.024
+   "elsif @state (run 1370 times)" :a1, 0.024, 0.026
+   "case @state.to_s (run 1370 times)" :a1, 0.026, 0.029
+   "parse_source(line) (run 1131 times)" :a1, 0.029, 0.061
+   "@state = :platform" :a1, 0.061, 0.062
+   "parse_platform(line)" :a1, 0.062, 0.063
+   "@state = :dependency" :a1, 0.063, 0.064
+   "parse_dependency(line) (run 237 times)" :a1, 0.064, 0.079
+   "@state = :bundled_with" :a1, 0.079, 0.080
+   "parse_bundled_with(line)" :a1, 0.080, 0.081
+   "@sources << @rubygems_aggregate" :a1, 0.081, 0.082
+   "@specs = @specs.values.sort_by(&:identifier)" :a1, 0.082, 0.093
+   "warn_for_outdated_bundler_version" :a1, 0.093, 0.094
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.46.45 PM.png" alt="diagram image" width="100%" /></p>
+
+<hr />
+
+<h2 id="parse_source">parse_source</h2>
+
+<!---
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: parse_source
+   dateFormat  s.SSS
+
+   "case line (run 1203 times)" :a1, 0.000, 0.003
+   "@current_source = nil (run 72 times)" :a1, 0.003, 0.004
+   "@opts = {} (run 72 times)" :a1, 0.004, 0.005
+   "@type = line (run 72 times)" :a1, 0.005, 0.006
+   "value = $2 (run 205 times)" :a1, 0.006, 0.007
+   "value = true if value == 'true' (run 205 times)" :a1, 0.007, 0.008
+   "value = false if value == 'false' (run 205 times)" :a1, 0.008, 0.009
+   "key = $1 (run 205 times)" :a1, 0.009, 0.010
+   "if @opts[key] (run 205 times)" :a1, 0.010, 0.011
+   "@opts[key] = value (run 205 times)" :a1, 0.011, 0.014
+   "case @type (run 72 times)" :a1, 0.014, 0.015
+   "@current_source = TYPES[@type].from_lock(@opts) (run 71 times)" :a1, 0.015, 0.016
+   "if @sources.include?(@current_source) (run 71 times)" :a1, 0.016, 0.017
+   "@sources << @current_source (run 71 times)" :a1, 0.017, 0.018
+   "parse_spec(line) (run 854 times)" :a1, 0.018, 0.057
+   "Array(@opts['remote']).each do |url|" :a1, 0.057, 0.058
+   "@rubygems_aggregate.add_remote(url)" :a1, 0.058, 0.059
+   "@current_source = @rubygems_aggregate" :a1, 0.059, 0.060
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 4.47.00 PM.png" alt="diagram image" width="100%" /></p>
+
+<p><code class="highlighter-rouge">parse_spec</code> is the obvious bulk of this method, so let’s also look there.</p>
+
+<hr />
+
+<h2 id="parse_spec">parse_spec</h2>
+
+<p>The parse spec code looks like so:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">parse_spec</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">line</span> <span class="o">=~</span> <span class="no">NAME_VERSION_4</span>
+    <span class="nb">name</span> <span class="o">=</span> <span class="vg">$1</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="vg">$2</span>
+    <span class="n">platform</span> <span class="o">=</span> <span class="vg">$3</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Version</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+    <span class="n">platform</span> <span class="o">=</span> <span class="n">platform</span> <span class="p">?</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Platform</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">platform</span><span class="p">)</span> <span class="p">:</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Platform</span><span class="o">::</span><span class="no">RUBY</span>
+    <span class="vi">@current_spec</span> <span class="o">=</span> <span class="no">LazySpecification</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">platform</span><span class="p">)</span>
+    <span class="vi">@current_spec</span><span class="p">.</span><span class="nf">source</span> <span class="o">=</span> <span class="vi">@current_source</span>
+
+    <span class="c1"># Avoid introducing multiple copies of the same spec (caused by</span>
+    <span class="c1"># duplicate GIT sections)</span>
+    <span class="vi">@specs</span><span class="p">[</span><span class="vi">@current_spec</span><span class="p">.</span><span class="nf">identifier</span><span class="p">]</span> <span class="o">||=</span> <span class="vi">@current_spec</span>
+  <span class="k">elsif</span> <span class="n">line</span> <span class="o">=~</span> <span class="no">NAME_VERSION_6</span>
+    <span class="nb">name</span> <span class="o">=</span> <span class="vg">$1</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="vg">$2</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">version</span><span class="p">.</span><span class="nf">split</span><span class="p">(</span><span class="s2">","</span><span class="p">).</span><span class="nf">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:strip</span><span class="p">)</span> <span class="k">if</span> <span class="n">version</span>
+    <span class="n">dep</span> <span class="o">=</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Dependency</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span> <span class="n">version</span><span class="p">)</span>
+    <span class="vi">@current_spec</span><span class="p">.</span><span class="nf">dependencies</span> <span class="o">&lt;&lt;</span> <span class="n">dep</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>It takes about 15-17ms to run all of it. I’d like to see how often each part is called.</p>
+
+<ul>
+  <li>NAME_VERSION_4, called 374 times, took about 7ms</li>
+  <li>NAME_VERSION_6, called 480 times, took about 8ms</li>
+</ul>
+
+<p>Which means they take equally as long, but the NAME_VERSION_4 option is slower taking about 0.000044s for each run as opposed to 0.000035s for each run.</p>
+
+<p>So, what is the difference between these two? Well NAME_VERSION_4 is a top level dependency, whereas NAME_VERSION_6 is a sub-dependency, it seems.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">4</span>     <span class="n">web</span><span class="o">-</span><span class="n">console</span> <span class="p">(</span><span class="mf">3.4</span><span class="o">.</span><span class="mi">0</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">actionview</span> <span class="p">(</span><span class="o">&gt;=</span> <span class="mf">5.0</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">activemodel</span> <span class="p">(</span><span class="o">&gt;=</span> <span class="mf">5.0</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">debug_inspector</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">railties</span> <span class="p">(</span><span class="o">&gt;=</span> <span class="mf">5.0</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">4</span>     <span class="n">webmock</span> <span class="p">(</span><span class="mf">2.3</span><span class="o">.</span><span class="mi">2</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">addressable</span> <span class="p">(</span><span class="o">&gt;=</span> <span class="mf">2.3</span><span class="o">.</span><span class="mi">6</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">crack</span> <span class="p">(</span><span class="o">&gt;=</span> <span class="mf">0.3</span><span class="o">.</span><span class="mi">2</span><span class="p">)</span>
+ <span class="no">NAME</span> <span class="no">VERSION</span> <span class="mi">6</span>       <span class="n">hashdiff</span>
+</code></pre></div></div>
+
+<p>So what does this actually do? Seems it resolves specifications from the lockfile. The “4 space” (NAME VERSION 4) seems to also load a current spec, which I don’t quite get. Seems we re-assign this class level variable a lot to avoid passing it around.</p>
+
+<!--
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/lockfile_parser.rb method: parse_spec
+   dateFormat  s.SSS
+
+   "if line =~ NAME_VERSION_4 (run 854 times)" :a1, 0.000, 0.004
+   "name = $1 (run 374 times)" :a1, 0.004, 0.005
+   "version = $2 (run 374 times)" :a1, 0.005, 0.006
+   "platform = $3 (run 374 times)" :a1, 0.006, 0.007
+   "version = Gem::Version.new(version) (run 374 times)" :a1, 0.007, 0.009
+   "platform = platform ? Gem::Platform.new(platform) : Gem::Platform::RUBY (run 374 times)" :a1, 0.009, 0.010
+   "@current_spec = LazySpecification.new(name  version  platform) (run 374 times)" :a1, 0.010, 0.013
+   "@current_spec.source = @current_source (run 374 times)" :a1, 0.013, 0.014
+   "elsif line =~ NAME_VERSION_6 (run 480 times)" :a1, 0.014, 0.016
+   "name = $1 (run 480 times)" :a1, 0.016, 0.018
+   "version = $2 (run 480 times)" :a1, 0.018, 0.019
+   "version = version.split(' ').map(&:strip) if version (run 480 times)" :a1, 0.019, 0.021
+   "dep = Gem::Dependency.new(name  version) (run 480 times)" :a1, 0.021, 0.035
+   "@specs[@current_spec.identifier] ||= @current_spec" :a1, 0.035, 0.036
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/Screen Shot 2017-03-28 at 6.33.13 PM.png" alt="diagram image" width="100%" /></p>
+
+<p>We can see that <code class="highlighter-rouge">"dep = GemDependency.new(name  version) (run 480 times)" :a1, 0.021, 0.035</code> takes a chunk of time (14ms with gantt generation, 6ms in reality), otherwise there’s not much bulk here.</p>
+
+<hr />
+
+<p>So, in the end the reason this file is slower is that it is iterating over many sources and creating <code class="highlighter-rouge">Gem::Dependency</code> objects. There is likely something we could do to make <code class="highlighter-rouge">LockFileParser</code> faster, but the work likely won’t be worth the time spent.</p>
+
+<p>There isn’t much we can do to make this file faster without caching using marshalling the data or something.</p>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+          <category> bundler </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+          <tag> bundler </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[bundler/definition.rb]]></title>
+      <url>/computers/ruby/bundler/2017/03/27/definition/</url>
+      <content type="html"><![CDATA[<!---
+```diagram
+graph TD
+   Bundler#definition[Bundler#definition 226ms]--120ms-\->Definition.build
+   Definition.build--118ms-\->Dsl#evaluate
+   Dsl#evaluate--33ms-\->builder.eval_gemfile
+   Dsl#evaluate--85ms-\->Definition#new[builder.to_definition -> Definition#new]
+   Definition#new--33ms-\->LockfileParser.new
+   Definition#new--35ms-\->definition#converge_dependencies
+   definition#converge_dependencies--113K calls, 30ms-\->locked_deps.select
+   LockfileParser.new--1370 calls, 26ms-\->lockfile_parser#parse_state
+   lockfile_parser#parse_state--1131 times, 22ms-\->lockfile_parser#parse_source
+   lockfile_parser#parse_state--1 times, <1ms-\->lockfile_parser#parse_platform
+   lockfile_parser#parse_state--237 times, 5ms-\->lockfile_parser#parse_dependency
+   lockfile_parser#parse_state--1 times, <1ms-\->lockfile_parser#parse_bundled_with
+   lockfile_parser#parse_source--854 calls, about 15ms-\->lockfile_parser#parse_spec
+   lockfile_parser#parse_spec--374 calls, 7.5ms-\->NAME_VERSION_4
+   lockfile_parser#parse_spec--480 calls, 7.5ms-\->NAME_VERSION_6
+   NAME_VERSION_4--6ms-\->current_spec.source
+   NAME_VERSION_6--2ms-\->Gem::Dependency.new(name, version)
+   NAME_VERSION_6--6ms-\->specs=current_spec
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/a24ee98f37dd33b571a4efa535c1aa68.png" alt="diagram image" width="100%" /></p>
+
+<hr />
+
+<h2 id="bundlerdefinition">Bundler#definition</h2>
+
+<!---
+```diagram
+gantt
+   title file: gems/bundler-1.14.5/lib/bundler.rb method: definition
+   dateFormat  s.SSS
+
+   @definition = nil if unlock :a1, 0.000, 0.001
+   end :a1, 0.001, 0.002
+   configure :a1, 0.002, 0.016
+   Definition.build(default_gemfile, default_lockfile, unlock) :a1, 0.016, 0.226
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/23b676377c99e839cbedb08ef02c2580.png" alt="diagram image" width="100%" /></p>
+
+<p>As we can see, <code class="highlighter-rouge">Definition.build</code> take a long time to process.</p>
+
+<hr />
+
+<h2 id="definitionbuild">Definition.build</h2>
+
+<!---
+```diagram
+gantt
+   title lib/bundler/definition.rb#build
+   dateFormat  s.SSS
+
+   unlock ||= {} :a1, 0.000, 0.001
+   gemfile = Pathname.new(gemfile).expand_path :a1, 0.001, 0.002
+   raise GemfileNotFound :a1, 0.002, 0.003
+   Dsl.evaluate(gemfile, lockfile, unlock) :a1, 0.003, 0.214
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/8e82477f959f767a7fd4cf8c58b1f5fb.png" alt="diagram image" width="100%" /></p>
+
+<p>From here we can see <code class="highlighter-rouge">Dsl.evaluate</code> takes the most time</p>
+
+<hr />
+
+<h2 id="dslevaluate">Dsl.evaluate</h2>
+
+<!---
+```diagram
+gantt
+   title lib/bundler/dsl.rb#evaluate
+   dateFormat  s.SSS
+
+   builder = new :a1, 0.000, 0.001
+   builder.eval_gemfile(gemfile) :a1, 0.001, 0.056
+   builder.to_definition(lockfile, unlock) :a1, 0.056, 0.185
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/9a323efe751f19d3f0e6b0a4664dcc77.png" alt="diagram image" width="100%" /></p>
+
+<p>We can see that the time is split between <code class="highlighter-rouge">eval_gemfile</code> and <code class="highlighter-rouge">to_definition</code>.</p>
+
+<hr />
+
+<h2 id="buildereval_gemfile">builder.eval_gemfile</h2>
+
+<!---
+```diagram
+gantt
+   title lib/bundler/dsl.rb#eval_gemfile
+   dateFormat  s.SSS
+
+   begin :a1, 0.000, 0.001
+   expanded_gemfile_path = ... :a1, 0.001, 0.002
+   original_gemfile = @gemfile :a1, 0.002, 0.003
+   @gemfile = expanded_gemfile_path :a1, 0.003, 0.004
+   contents ||= Bundler.read_file(gemfile.to_s) :a1, 0.004, 0.005
+   instance_eval :a1, 0.005, 0.058
+   @gemfile = original_gemfile :a1, 0.058, 0.059
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/8442a36a5b4f4f43b6a2bddecca3dca7.png" alt="diagram image" width="100%" /></p>
+
+<p>We can see here that when we take the contents of the bundler file, and <code class="highlighter-rouge">instance_eval</code> it, we’ll spend about 55ms doing that.</p>
+
+<p>Digging into the <code class="highlighter-rouge">instance_eval</code> a little more using <code class="highlighter-rouge">TracePoint</code>, we can see that there are hundreds of mini-methods called starting with <code class="highlighter-rouge">dsl#source</code>. We get this approximate trace:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="mi">161</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:source</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">336</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:normalize_hash</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">435</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:normalize_source</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">449</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:check_primary_source_safety</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">90</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">SourceList</span><span class="p">,</span> <span class="ss">:rubygems_primary_remotes</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">38</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">SourceList</span><span class="p">,</span> <span class="ss">:add_rubygems_remote</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">210</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Source</span><span class="o">::</span><span class="no">Rubygems</span><span class="p">,</span> <span class="ss">:add_remote</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="o">...</span>
+<span class="p">[</span><span class="mi">115</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">SourceList</span><span class="p">,</span> <span class="ss">:warn_on_git_protocol</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">245</span><span class="p">,</span> <span class="c1">#&lt;Class:Bundler&gt;, :settings, :call]</span>
+<span class="p">[</span><span class="mi">54</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Settings</span><span class="p">,</span> <span class="ss">:[]</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">224</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Settings</span><span class="p">,</span> <span class="ss">:key_for</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">325</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:with_source</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">79</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dependency</span><span class="p">,</span> <span class="ss">:initialize</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">38</span><span class="p">,</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Dependency</span><span class="p">,</span> <span class="ss">:initialize</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="o">...</span>
+<span class="p">[</span><span class="mi">54</span><span class="p">,</span> <span class="c1">#&lt;Class:Gem::Requirement&gt;, :create, :call]</span>
+<span class="p">[</span><span class="mi">123</span><span class="p">,</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Requirement</span><span class="p">,</span> <span class="ss">:initialize</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">121</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:gem</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">347</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:normalize_options</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">336</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:normalize_hash</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">343</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:valid_keys</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">418</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:validate_keys</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">209</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:git</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">336</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:normalize_hash</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">24</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">SourceList</span><span class="p">,</span> <span class="ss">:add_git_source</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">13</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Source</span><span class="o">::</span><span class="no">Git</span><span class="p">,</span> <span class="ss">:initialize</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">96</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">SourceList</span><span class="p">,</span> <span class="ss">:add_source_to_list</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">49</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Source</span><span class="o">::</span><span class="no">Git</span><span class="p">,</span> <span class="ss">:hash</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">79</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Source</span><span class="o">::</span><span class="no">Git</span><span class="p">,</span> <span class="ss">:name</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">49</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Source</span><span class="o">::</span><span class="no">Git</span><span class="p">,</span> <span class="ss">:hash</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">79</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Source</span><span class="o">::</span><span class="no">Git</span><span class="p">,</span> <span class="ss">:name</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="o">...</span> <span class="n">repeat</span> <span class="n">the</span> <span class="n">last</span> <span class="n">block</span> <span class="n">a</span> <span class="n">lot</span><span class="p">,</span> <span class="n">particularly</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Source</span><span class="o">::</span><span class="no">Git</span> <span class="n">calls</span> <span class="o">...</span>
+<span class="p">[</span><span class="mi">115</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">SourceList</span><span class="p">,</span> <span class="ss">:warn_on_git_protocol</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">245</span><span class="p">,</span> <span class="c1">#&lt;Class:Bundler&gt;, :settings, :call]</span>
+<span class="p">[</span><span class="mi">54</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Settings</span><span class="p">,</span> <span class="ss">:[]</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">224</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Settings</span><span class="p">,</span> <span class="ss">:key_for</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">325</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dsl</span><span class="p">,</span> <span class="ss">:with_source</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">79</span><span class="p">,</span> <span class="no">Bundler</span><span class="o">::</span><span class="no">Dependency</span><span class="p">,</span> <span class="ss">:initialize</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+<span class="p">[</span><span class="mi">38</span><span class="p">,</span> <span class="no">Gem</span><span class="o">::</span><span class="no">Dependency</span><span class="p">,</span> <span class="ss">:initialize</span><span class="p">,</span> <span class="ss">:call</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Without optimizing dozens of places, this is likely a dead end. We can look at caching, but it is uncacheable. Due to extensive use of procs and default values in hashes, we cannot cache the class object.</p>
+
+<p>This is a dead end.</p>
+
+<hr />
+
+<h2 id="builderto_definition">builder.to_definition</h2>
+
+<p>This method simply calls <code class="highlighter-rouge">Definition.new</code>, so we’ll move to that instead.</p>
+
+<hr />
+
+<h2 id="definitionnew">Definition.new</h2>
+
+<!---
+```diagram
+gantt
+   title lib/bundler/definition.rb#initialize
+   dateFormat  s.SSS
+
+   @unlocking = unlock == true || !unlock.empty? :a1, 0.000, 0.001
+   @dependencies    = dependencies :a1, 0.001, 0.002
+   @sources         = sources :a1, 0.002, 0.003
+   @unlock          = unlock :a1, 0.003, 0.004
+   @optional_groups = optional_groups :a1, 0.004, 0.005
+   @remote          = false :a1, 0.005, 0.006
+   @specs           = nil :a1, 0.006, 0.007
+   @ruby_version    = ruby_version :a1, 0.007, 0.008
+   @lockfile               = lockfile :a1, 0.008, 0.009
+   @lockfile_contents      = String.new :a1, 0.009, 0.010
+   @locked_bundler_version = nil :a1, 0.010, 0.011
+   @locked_ruby_version    = nil :a1, 0.011, 0.012
+   if lockfile && File.exist?(lockfile) :a1, 0.012, 0.013
+   @lockfile_contents = Bundler.read_file(lockfile) :a1, 0.013, 0.014
+   @locked_gems = LockfileParser.new(@lockfile_contents) :a1, 0.014, 0.062
+   @locked_platforms = @locked_gems.platforms :a1, 0.062, 0.063
+   @platforms = @locked_platforms.dup :a1, 0.063, 0.064
+   @locked_bundler_version = @locked_gems.bundler_version :a1, 0.064, 0.065
+   @locked_ruby_version = @locked_gems.ruby_version :a1, 0.065, 0.066
+   if unlock != true :a1, 0.066, 0.067
+   @locked_deps    = @locked_gems.dependencies :a1, 0.067, 0.068
+   @locked_specs   = SpecSet.new(@locked_gems.specs) :a1, 0.068, 0.070
+   @locked_sources = @locked_gems.sources :a1, 0.070, 0.071
+   @unlock[:gems] ||= [] :a1, 0.071, 0.072
+   @unlock[:sources] ||= [] :a1, 0.072, 0.073
+   @unlock[:ruby] ||= if @ruby_version && locked_ruby_version_object :a1, 0.073, 0.074
+   @unlocking ||= @unlock[:ruby] ||= (!@locked_ruby_version ^ !@ruby_version) :a1, 0.074, 0.075
+   add_current_platform unless Bundler.settings[:frozen] :a1, 0.075, 0.076
+   converge_path_sources_to_gemspec_sources :a1, 0.076, 0.094
+   @path_changes = converge_paths :a1, 0.094, 0.095
+   @source_changes = converge_sources :a1, 0.095, 0.109
+   unless @unlock[:lock_shared_dependencies] :a1, 0.109, 0.110
+   eager_unlock = expand_dependencies(@unlock[:gems]) :a1, 0.110, 0.111
+   @unlock[:gems] = @locked_specs.for(eager_unlock).map(&:name) :a1, 0.111, 0.112
+   @gem_version_promoter = create_gem_version_promoter :a1, 0.112, 0.113
+   @dependency_changes = converge_dependencies :a1, 0.113, 0.181
+   @local_changes = converge_locals :a1, 0.181, 0.182
+   @requires = compute_requires :a1, 0.182, 0.183
+   fixup_dependency_types! :a1, 0.183, 0.194
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/b09f829c9ab8241be0bf624e1fccb56e.png" alt="diagram image" width="100%" /></p>
+
+<p>Taking some of the more “expensive” lines, we can dig a bit deeper to get more accurate numbers.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>line</th>
+      <th>num_calls</th>
+      <th>time (s)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>@locked_gems = LockfileParser.new(@lockfile_contents), :a1, ,</td>
+      <td>1</td>
+      <td>0.03465300000971183</td>
+    </tr>
+    <tr>
+      <td>@locked_specs   = SpecSet.new(@locked_gems.specs), :a1, ,</td>
+      <td>1</td>
+      <td>0.002618999977130443</td>
+    </tr>
+    <tr>
+      <td>converge_path_sources_to_gemspec_sources, :a1, ,</td>
+      <td>1</td>
+      <td>0.006308999989414588</td>
+    </tr>
+    <tr>
+      <td>@source_changes = converge_sources, :a1, ,</td>
+      <td>1</td>
+      <td>0.010037000000011176</td>
+    </tr>
+    <tr>
+      <td>@dependency_changes = converge_dependencies, :a1, ,</td>
+      <td>1</td>
+      <td>0.022082999988924712</td>
+    </tr>
+    <tr>
+      <td>fixup_dependency_types!, :a1, ,</td>
+      <td>1</td>
+      <td>0.0025529999984428287</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="lockfileparsernew">LockfileParser.new</h2>
+
+<p>See <a href="../lockfile_parser">lockfile_parser</a></p>
+
+<hr />
+
+<h2 id="definitioncoverge_dependencies">definition#coverge_dependencies</h2>
+
+<!---
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
+   dateFormat  s.SSS
+
+   "(@dependencies + @locked_deps.values).each do |dep|" :a1, 0.000, 0.001
+   "locked_source = @locked_deps[dep.name] (run 474 times)" :a1, 0.001, 0.002
+   "if Bundler.settings[:frozen] && !locked_source.nil? && (run 474 times)" :a1, 0.002, 0.005
+   "elsif dep.source (run 474 times)" :a1, 0.005, 0.006
+   "dep.source = sources.get(dep.source) (run 142 times)" :a1, 0.006, 0.009
+   "if dep.source.is_a?(Source::Gemspec) (run 474 times)" :a1, 0.009, 0.010
+   "dependency_without_type = proc {|d| Gem::Dependency.new(d.name  *d.requirement.as_list) } (run 475 times)" :a1, 0.010, 0.026
+   "Set.new(@dependencies.map(&dependency_without_type)) != Set.new(@locked_deps.values.map(&dependency_without_type))" :a1, 0.026, 0.027
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/9fa239921639c7fb855711c800cd6576.png" alt="diagram image" width="100%" /></p>
+
+<p>It is very obvious to see that this particular line <code class="highlighter-rouge">locked_source = @locked_deps.select {|d| d.name == dep.name }.last (run 112812 times) :a1, 0.001, 0.182</code> is the root cause of the slowness.
+Run 112-113K times for the Shopify application, it is slow and could likely benefit from some up front hashing.</p>
+
+<p>This particular line was fixed by <a href="https://github.com/bundler/bundler/pull/5539">this pull request</a>.</p>
+
+<p>After fixing the issue surrounding select, my attention turned to <code class="highlighter-rouge">dependency_without_type = proc {|d| Gem::Dependency.new(d.name *d.requirement.as_list) }</code>, which is run 475 times and takes 16ms. <a href="https://github.com/bundler/bundler/pull/5354">This pull request</a> provides me with the context to know that we want to compare name and requirement, but not necessarily anything else.</p>
+
+<p>Let’s look at the documentation for <code class="highlighter-rouge">Gem::Dependency</code> to understand how equality works so we don’t regress. The entry for comparison shows the following:</p>
+
+<blockquote>
+  <p>Uses this dependency as a pattern to compare to other. This dependency will match if the name matches the other’s name, and other has only an equal version requirement that satisfies this dependency.</p>
+</blockquote>
+
+<p>As we can see, we simply need to match the name and version requirement to match. This means we don’t necessarily need the <code class="highlighter-rouge">Gem::Dependency</code> as we simply use it for equality. That said <code class="highlighter-rouge">equal version requirement</code> isn’t a particularly easy thing to do.
+Requirements such as <code class="highlighter-rouge">1.0.1</code> and <code class="highlighter-rouge">&gt; 1.0.0</code> are ok, but are not easily compared. This means we can’t do something more naive like compare 2 arrays. Let’s look at what the comparison is actually doing.</p>
+
+<p>The comparison is making sure all dependencies match. We could likely do that with individual comparisons, but we’d want to avoid comparing everything if needed (aka bail with false on the first mis-match).
+The following block will make sure we have a corresponding entry in <code class="highlighter-rouge">@locked_deps</code> for all dependencies and that they match.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="vi">@dependencies</span><span class="p">.</span><span class="nf">any?</span> <span class="k">do</span> <span class="o">|</span><span class="n">dependency</span><span class="o">|</span>
+ <span class="n">locked_dep</span> <span class="o">=</span> <span class="vi">@locked_deps</span><span class="p">[</span><span class="n">dependency</span><span class="p">.</span><span class="nf">name</span><span class="p">]</span>
+ <span class="k">next</span> <span class="kp">true</span> <span class="k">if</span> <span class="n">locked_dep</span><span class="p">.</span><span class="nf">nil?</span>
+ <span class="n">dependency</span> <span class="o">===</span> <span class="n">locked_dep</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>This results in the following timings:</p>
+
+<!---
+```diagram
+gantt
+   title file: /gems/bundler-1.14.6/lib/bundler/definition.rb method: converge_dependencies
+   dateFormat  s.SSS
+
+   "(@dependencies + @locked_deps.values).each do |dep|" :a1, 0.000, 0.001
+   "locked_source = @locked_deps[dep.name] (run 474 times)" :a1, 0.001, 0.002
+   "if Bundler.settings[frozen] && !locked_source.nil? && (run 474 times)" :a1, 0.002, 0.005
+   "elsif dep.source (run 474 times)" :a1, 0.005, 0.006
+   "dep.source = sources.get(dep.source) (run 142 times)" :a1, 0.006, 0.009
+   "if dep.source.is_a?(SourceGemspec) (run 474 times)" :a1, 0.009, 0.010
+   "@dependencies.any? do |dependency|" :a1, 0.010, 0.011
+   "locked_dep = @locked_deps[dependency.name] (run 9 times)" :a1, 0.011, 0.012
+   "next true if locked_dep.nil? (run 9 times)" :a1, 0.012, 0.013
+   "dependency === locked_dep (run 9 times)" :a1, 0.013, 0.014
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/cf900e705f924982efd13e032a7167fa.png" alt="diagram image" width="100%" /></p>
+
+<p>As you can see, we’ve saved about half of the method time.</p>
+
+<p>Running the test added to the <a href="https://github.com/bundler/bundler/pull/5354">pull request</a> used for context results in a success!</p>
+
+<hr />
+
+<h2 id="actions">Actions</h2>
+
+<ul>
+  <li>Convert @locked_deps to hash, see if that improves things with <code class="highlighter-rouge">O(1)</code> access instead. Fixed in <a href="https://github.com/bundler/bundler/pull/5539">this pull request</a></li>
+  <li>Avoid using <code class="highlighter-rouge">Gem::Dependency</code> just for comparison in <code class="highlighter-rouge">converge_dependencies</code>. Fixed in <a href="https://github.com/bundler/bundler/pull/5546">this pull request</a></li>
+  <li>Can <code class="highlighter-rouge">parse_source</code> in the lockfile parse be faster? <em>Not really, this was a dead end</em></li>
+  <li>Look at caching the evaled gemfile. Not easily possible. There are tons of side effects of the eval which change class level variables. It would require a large refactor for minimal benefit.</li>
+  <li>Cache the class instance instead? Uncacheable. Due to extensive use of procs and default values in hashes, we cannot cache the class object.</li>
+</ul>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+          <category> bundler </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+          <tag> bundler </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Auto-generating Gantt charts for a method]]></title>
+      <url>/computers/ruby/2017/03/23/auto_generated_gantt_charts/</url>
+      <content type="html"><![CDATA[<p>While working on timing the performance of Bundler, I noticed that Gantt charts are an effective way to visualize slowness. Working off of this theory, I automated the generation of the charts using <a href="http://knsv.github.io/mermaid/index.html">Mermaid</a>. The resulting chart data can be plugged into <a href="http://knsv.github.io/mermaid/live_editor/">this online editor</a>, or you can generate it using the Mermaid library yourself.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="c1"># We use a global aggregate cache to allow us to track methods within a loop all at once</span>
+<span class="vg">$timed</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="nb">at_exit</span> <span class="k">do</span>
+  <span class="vg">$timed</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">method_name</span><span class="p">,</span> <span class="n">timed_hash</span><span class="o">|</span>
+    <span class="c1"># Output mermaid syntax for gantt</span>
+    <span class="n">title_file</span> <span class="o">=</span> <span class="n">timed_hash</span><span class="p">[</span><span class="ss">:path</span><span class="p">].</span><span class="nf">gsub</span><span class="p">(</span><span class="no">ENV</span><span class="p">[</span><span class="s1">'GEM_HOME'</span><span class="p">],</span> <span class="s1">''</span><span class="p">).</span><span class="nf">gsub</span><span class="p">(</span><span class="no">ENV</span><span class="p">[</span><span class="s1">'HOME'</span><span class="p">],</span> <span class="s1">''</span><span class="p">)</span>
+    <span class="nb">puts</span> <span class="s2">"gantt"</span>
+    <span class="nb">puts</span> <span class="s2">"   title file: </span><span class="si">#{</span><span class="n">title_file</span><span class="si">}</span><span class="s2"> method: </span><span class="si">#{</span><span class="n">method_name</span><span class="si">}</span><span class="s2">"</span>
+    <span class="nb">puts</span> <span class="s2">"   dateFormat  s.SSS</span><span class="se">\n\n</span><span class="s2">"</span>
+
+    <span class="n">curr_time</span> <span class="o">=</span> <span class="mf">0.000</span>
+
+    <span class="c1"># Aggregate the lines together. Loops can cause things to become unweildly otherwise</span>
+    <span class="vi">@grouped_lines</span> <span class="o">=</span> <span class="n">timed_hash</span><span class="p">[</span><span class="ss">:entries</span><span class="p">].</span><span class="nf">group_by</span> <span class="p">{</span> <span class="o">|</span><span class="n">line</span><span class="o">|</span> <span class="p">[</span><span class="n">line</span><span class="p">[</span><span class="ss">:line</span><span class="p">],</span> <span class="n">line</span><span class="p">[</span><span class="ss">:line_no</span><span class="p">]]</span> <span class="p">}</span>
+
+    <span class="vi">@grouped_lines</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="p">(</span><span class="n">group_name</span><span class="p">,</span> <span class="n">_line_no</span><span class="p">),</span> <span class="n">group</span><span class="o">|</span>
+      <span class="c1"># If we have run more than once, we should indicate how many times something is called</span>
+      <span class="n">entry_name</span> <span class="o">=</span> <span class="n">group</span><span class="p">.</span><span class="nf">size</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">?</span> <span class="s2">"</span><span class="si">#{</span><span class="n">group_name</span><span class="si">}</span><span class="s2"> (run </span><span class="si">#{</span><span class="n">group</span><span class="p">.</span><span class="nf">size</span><span class="si">}</span><span class="s2"> times)"</span> <span class="p">:</span> <span class="n">group_name</span>
+      <span class="n">entry_name</span> <span class="o">=</span> <span class="n">entry_name</span><span class="p">.</span><span class="nf">tr</span><span class="p">(</span><span class="s1">'"'</span><span class="p">,</span> <span class="s2">"'"</span><span class="p">).</span><span class="nf">tr</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="s1">' '</span><span class="p">)</span> <span class="c1"># Mermaid has trouble with these</span>
+
+      <span class="c1"># Total time for all entries to run</span>
+      <span class="n">total_time</span> <span class="o">=</span> <span class="n">group</span><span class="p">.</span><span class="nf">collect</span> <span class="p">{</span> <span class="o">|</span><span class="n">e</span><span class="o">|</span> <span class="n">e</span><span class="p">[</span><span class="ss">:time</span><span class="p">]</span> <span class="p">}.</span><span class="nf">inject</span><span class="p">(:</span><span class="o">+</span><span class="p">)</span>
+      <span class="n">time</span> <span class="o">=</span> <span class="n">total_time</span> <span class="o">&lt;</span> <span class="mf">0.001</span> <span class="p">?</span> <span class="mf">0.001</span> <span class="p">:</span> <span class="n">total_time</span>
+
+      <span class="c1"># Output the line</span>
+      <span class="n">post_time</span> <span class="o">=</span> <span class="n">time</span> <span class="o">+</span> <span class="n">curr_time</span>
+      <span class="nb">puts</span> <span class="nb">format</span><span class="p">(</span><span class="s2">"   </span><span class="se">\"</span><span class="si">#{</span><span class="n">entry_name</span><span class="si">}</span><span class="se">\"</span><span class="s2"> :a1, %.3f, %.3f"</span><span class="p">,</span> <span class="n">curr_time</span><span class="p">,</span> <span class="n">post_time</span><span class="p">)</span>
+      <span class="n">curr_time</span> <span class="o">=</span> <span class="n">post_time</span>
+    <span class="k">end</span>
+
+    <span class="nb">puts</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="k">def</span> <span class="nf">gantt_chart</span>
+  <span class="n">ret</span> <span class="o">=</span> <span class="kp">nil</span>
+
+  <span class="c1"># Determine the method and path that we're calling from</span>
+  <span class="n">call_loc</span> <span class="o">=</span> <span class="n">caller_locations</span><span class="p">.</span><span class="nf">reject</span> <span class="p">{</span> <span class="o">|</span><span class="n">l</span><span class="o">|</span> <span class="n">l</span><span class="p">.</span><span class="nf">path</span><span class="p">.</span><span class="nf">include?</span><span class="p">(</span><span class="s1">'byebug'</span><span class="p">)</span> <span class="p">}.</span><span class="nf">first</span>
+  <span class="n">method_name</span> <span class="o">=</span> <span class="n">call_loc</span><span class="p">.</span><span class="nf">label</span>
+  <span class="n">path</span> <span class="o">=</span> <span class="n">call_loc</span><span class="p">.</span><span class="nf">path</span>
+  <span class="n">source</span> <span class="o">=</span> <span class="no">File</span><span class="p">.</span><span class="nf">readlines</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+  <span class="k">unless</span> <span class="vg">$timed</span><span class="p">[</span><span class="n">method_name</span><span class="p">]</span>
+    <span class="nb">puts</span> <span class="s2">"Tracing </span><span class="si">#{</span><span class="n">path</span><span class="si">}</span><span class="s2"> for method </span><span class="si">#{</span><span class="n">method_name</span><span class="si">}</span><span class="s2">"</span>
+    <span class="vg">$timed</span><span class="p">[</span><span class="n">method_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="ss">path: </span><span class="n">path</span><span class="p">,</span> <span class="ss">entries: </span><span class="p">[]</span> <span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="c1"># This block will be used to finalize the time it to run, gather the line source, etc.</span>
+  <span class="n">finalize_time</span> <span class="o">=</span> <span class="o">-&gt;</span> <span class="p">()</span> <span class="k">do</span>
+    <span class="k">if</span> <span class="n">last</span> <span class="o">=</span> <span class="vg">$timed</span><span class="p">[</span><span class="n">method_name</span><span class="p">][</span><span class="ss">:entries</span><span class="p">].</span><span class="nf">pop</span>
+      <span class="c1"># Finalize the time</span>
+      <span class="n">time</span> <span class="o">=</span> <span class="no">Process</span><span class="p">.</span><span class="nf">clock_gettime</span><span class="p">(</span><span class="no">Process</span><span class="o">::</span><span class="no">CLOCK_MONOTONIC</span><span class="p">)</span> <span class="o">-</span> <span class="n">last</span><span class="p">[</span><span class="ss">:start</span><span class="p">]</span>
+      <span class="c1"># Get the source line from the line number</span>
+      <span class="n">line</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="n">last</span><span class="p">[</span><span class="ss">:line_no</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">].</span><span class="nf">strip</span>
+      <span class="vg">$timed</span><span class="p">[</span><span class="n">method_name</span><span class="p">][</span><span class="ss">:entries</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="p">{</span> <span class="ss">line_no: </span><span class="n">last</span><span class="p">[</span><span class="ss">:line_no</span><span class="p">],</span> <span class="ss">line: </span><span class="n">line</span><span class="p">,</span> <span class="ss">time: </span><span class="n">time</span> <span class="p">}</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+
+  <span class="c1"># We use Ruby's tracepoint on a per line basis</span>
+  <span class="c1"># We only care about lines called within our method and within our path</span>
+  <span class="no">TracePoint</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="ss">:line</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">tp</span><span class="o">|</span>
+    <span class="k">next</span> <span class="k">unless</span> <span class="n">tp</span><span class="p">.</span><span class="nf">path</span> <span class="o">==</span> <span class="n">path</span>
+    <span class="k">next</span> <span class="k">unless</span> <span class="n">tp</span><span class="p">.</span><span class="nf">method_id</span><span class="p">.</span><span class="nf">to_s</span> <span class="o">==</span> <span class="n">method_name</span><span class="p">.</span><span class="nf">to_s</span>
+
+    <span class="c1"># We could have a call from last time, finalize it, we've moved to a new line</span>
+    <span class="n">finalize_time</span><span class="p">.</span><span class="nf">call</span>
+    <span class="c1"># Initialize a new entry with the line number and a start time</span>
+    <span class="vg">$timed</span><span class="p">[</span><span class="n">method_name</span><span class="p">][</span><span class="ss">:entries</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="p">{</span> <span class="ss">line_no: </span><span class="n">tp</span><span class="p">.</span><span class="nf">lineno</span><span class="p">,</span> <span class="ss">start: </span><span class="no">Process</span><span class="p">.</span><span class="nf">clock_gettime</span><span class="p">(</span><span class="no">Process</span><span class="o">::</span><span class="no">CLOCK_MONOTONIC</span><span class="p">)</span> <span class="p">}</span>
+  <span class="k">end</span><span class="p">.</span><span class="nf">enable</span> <span class="k">do</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="k">yield</span>
+    <span class="n">finalize_time</span><span class="p">.</span><span class="nf">call</span> <span class="c1"># The last call needs to be finalized, finalize it here</span>
+  <span class="k">end</span>
+  
+  <span class="n">ret</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>and this chart:</p>
+
+<!---
+```diagram
+gantt
+   title file: /Users/juliannadeau/.gem/ruby/2.3.3/gems/bundler-1.14.5/lib/bundler.rb method: setup
+   dateFormat   s.SSS
+
+   return @setup if defined?(@setup) && @setup :a1, 0.000, 0.001
+   definition.validate_runtime! :a1, 0.001, 0.229
+   SharedHelpers.print_major_deprecations! :a1, 0.229, 0.230
+   if groups.empty? :a1, 0.230, 0.231
+   @setup = load.setup :a1, 0.231, 1.312
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/bundler_setup.png" alt="diagram image" width="100%" /></p>
+
+<p>We can now dig deeper into the lines <code class="highlighter-rouge">definition.validate_runtime!</code> and <code class="highlighter-rouge">@setup = load.setup</code> as they take the most time.</p>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[bundler/setup]]></title>
+      <url>/computers/ruby/bundler/2017/03/22/setup/</url>
+      <content type="html"><![CDATA[<p>Bundler setup parses through dependencies and compiles them into proper load paths. This step, on smaller applications, takes very little time. However on larger applications, this step can take a long duration - about 700-750ms to be exact.</p>
+
+<p>Below are notes about how long certain parts take.</p>
+
+<h3 id="timing-helper">Timing Helper</h3>
+
+<p>Throughtout these notes, I am using a method <code class="highlighter-rouge">_t</code>. This is a timing helper for scrappy timing defined as such:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="k">def</span> <span class="nf">_t</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+      <span class="n">t</span> <span class="o">=</span> <span class="no">Process</span><span class="p">.</span><span class="nf">clock_gettime</span><span class="p">(</span><span class="no">Process</span><span class="o">::</span><span class="no">CLOCK_MONOTONIC</span><span class="p">)</span>
+      <span class="n">ret</span> <span class="o">=</span> <span class="k">yield</span>
+      <span class="nb">puts</span> <span class="s2">"</span><span class="si">#{</span><span class="n">label</span><span class="si">}</span><span class="s2"> </span><span class="si">#{</span><span class="no">Process</span><span class="p">.</span><span class="nf">clock_gettime</span><span class="p">(</span><span class="no">Process</span><span class="o">::</span><span class="no">CLOCK_MONOTONIC</span><span class="p">)</span> <span class="o">-</span> <span class="n">t</span><span class="si">}</span><span class="s2">"</span>
+      <span class="n">ret</span>
+    <span class="k">end</span>
+</code></pre></div></div>
+
+<p>The key thing to note is that it uses CPU time and the return value is whatever it is from the yield. The latter point makes it easy to track things down.</p>
+
+<h2 id="highest-level">Highest Level</h2>
+
+<p>If we open the <code class="highlighter-rouge">bundler/setup.rb</code> file up, we might notice that it is small enough to simply benchmark each line. Doing this results in the following sequence diagram:</p>
+
+<!---
+```diagram
+gantt
+    title require 'bundler/setup'
+    dateFormat  s.SSS
+
+    section require
+    bundler/postit_trampoline :a1, 0.000, 0.006
+    bundler/shared_helpers :a1, 0.006, 0.007
+    bundler :a1, 0.007, 0.010
+
+    section Bundler
+    Bundler.setup :a2, 0.010, 0.710
+
+    section various
+    "other" :a3, 0.710, 0.711
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/ab3cdf34c521c668b44359644dcd6d8f.png" alt="diagram image" height="400px" /></p>
+
+<p>We can take note that <code class="highlighter-rouge">Bundler.setup</code> results in almost the entire duration of the call to <code class="highlighter-rouge">require 'bundler/setup'</code>. Let’s dig into that more.</p>
+
+<h2 id="bundlersetup">Bundler.setup</h2>
+
+<p>The call to <code class="highlighter-rouge">Bundler.setup</code> is a little bit ambiguous due to parameters, but checking the <code class="highlighter-rouge">source_location</code> at runtime results in <code class="highlighter-rouge">setup</code> at line 90 of <code class="highlighter-rouge">lib/bundler.rb</code>.
+This was what I originally thought, but it it good to check.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">Bundler</span><span class="p">.</span><span class="nf">method</span><span class="p">(</span><span class="ss">:setup</span><span class="p">).</span><span class="nf">source_location</span>
+<span class="p">[</span><span class="s2">"/Users/juliannadeau/.gem/ruby/2.3.3/gems/bundler-1.14.5/lib/bundler.rb"</span><span class="p">,</span> <span class="mi">90</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>The method definition here is as follows:</p>
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">return</span> <span class="vi">@setup</span> <span class="k">if</span> <span class="n">defined?</span><span class="p">(</span><span class="vi">@setup</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="vi">@setup</span>
+
+<span class="n">definition</span><span class="p">.</span><span class="nf">validate_runtime!</span>
+
+<span class="no">SharedHelpers</span><span class="p">.</span><span class="nf">print_major_deprecations!</span>
+
+<span class="k">if</span> <span class="n">groups</span><span class="p">.</span><span class="nf">empty?</span>
+  <span class="c1"># Load all groups, but only once</span>
+  <span class="vi">@setup</span> <span class="o">=</span> <span class="nb">load</span><span class="p">.</span><span class="nf">setup</span>
+<span class="k">else</span>
+  <span class="nb">load</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="o">*</span><span class="n">groups</span><span class="p">)</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>We can see that it caches the orginal result on the <code class="highlighter-rouge">Bundler</code> class and so we can only call it once per run. This is good as it will save a lot of time if we happen to call it twice.</p>
+
+<p>A few questions I have up front:</p>
+
+<ul>
+  <li>is <code class="highlighter-rouge">definition</code> a variable or a method? Given that this is the first call to a class, it’s probably a method.</li>
+  <li><code class="highlighter-rouge">groups</code> is almost definitely empty. It is probably a method too. Is it cached?</li>
+  <li>same thing with <code class="highlighter-rouge">load</code></li>
+</ul>
+
+<p>The reason this is important is that while the method calls on the return values of the methods mentioned above should be traced, we need to make sure that the method calls to get those return values
+aren’t slow either. To do this, we will need to split up the variable/method calls.</p>
+
+<p>We end up with this:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="k">return</span> <span class="vi">@setup</span> <span class="k">if</span> <span class="n">defined?</span><span class="p">(</span><span class="vi">@setup</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="vi">@setup</span>
+
+<span class="n">d</span> <span class="o">=</span> <span class="n">_t</span><span class="p">(</span><span class="s1">'definition'</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">definition</span>
+<span class="k">end</span>
+
+<span class="n">_t</span><span class="p">(</span><span class="s1">'validate_runtime!'</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">d</span><span class="p">.</span><span class="nf">validate_runtime!</span>
+<span class="k">end</span>
+
+<span class="n">_t</span><span class="p">(</span><span class="s1">'print_major_deprecations'</span><span class="p">)</span> <span class="k">do</span>
+  <span class="no">SharedHelpers</span><span class="p">.</span><span class="nf">print_major_deprecations!</span>
+<span class="k">end</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="n">_t</span><span class="p">(</span><span class="s1">'groups'</span><span class="p">)</span> <span class="k">do</span>
+  <span class="n">groups</span>
+<span class="k">end</span>
+
+<span class="n">l</span> <span class="o">=</span> <span class="n">_t</span><span class="p">(</span><span class="s1">'load'</span><span class="p">)</span> <span class="k">do</span>
+  <span class="nb">load</span>
+<span class="k">end</span>
+
+<span class="k">if</span> <span class="n">g</span><span class="p">.</span><span class="nf">empty?</span>
+  <span class="c1"># Load all groups, but only once</span>
+  <span class="vi">@setup</span> <span class="o">=</span> <span class="n">_t</span><span class="p">(</span><span class="s1">'setup 1'</span><span class="p">)</span> <span class="k">do</span>
+    <span class="n">l</span><span class="p">.</span><span class="nf">setup</span>
+  <span class="k">end</span>
+<span class="k">else</span>
+  <span class="n">_t</span><span class="p">(</span><span class="s1">'setup 2'</span><span class="p">)</span> <span class="p">{</span> <span class="n">l</span><span class="p">.</span><span class="nf">setup</span><span class="p">(</span><span class="o">*</span><span class="n">groups</span><span class="p">)</span> <span class="p">}</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<h3 id="results-of-timing">Results of timing</h3>
+
+<!---
+```diagram
+gantt
+    title Bundler.setup
+    dateFormat  s.SSS
+
+    section definition
+    initialize :a1, 0.000, 0.129
+    definition.validate_runtime! :a1, 0.129, 0.130
+
+    section SharedHelpers
+    print_major_deprecations! :a2, 0.130, 0.131
+
+    section groups
+    groups :a3, 0.131, 0.132
+
+    section load
+    load :a4, 0.132, 0.133
+    load.setup :a4, 0.133, 0.683
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/75890057a20de01f006baac5a4c816ab.png" alt="diagram image" height="400px" /></p>
+
+<p>It is painfully obvious that we spend a lot of time in 2 spots. About 1/3 of the time is spent in <code class="highlighter-rouge">definition</code>, and the other 2/3 is spent in <code class="highlighter-rouge">load.setup</code> (specifically the <code class="highlighter-rouge">setup</code> call). We’ll dig into both of these separately.</p>
+
+<hr />
+
+<p>To continue this path:</p>
+
+<ul>
+  <li><a href="../definition">definition</a></li>
+  <li><a href="../load">load</a></li>
+</ul>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+          <category> bundler </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+          <tag> bundler </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Rails Autoloading]]></title>
+      <url>/computers/ruby/2017/03/21/rails_autoloading/</url>
+      <content type="html"><![CDATA[<p>Autoloading code is a mechanism in Rails that causes frameworks, classes, and code to be loaded automatically on boot. This helps productivity by allowing developers to freely use constants and classes without having to explicitly require them.</p>
+
+<p>An issue arises however that large amounts of code that are not needed for boot are loaded during the boot of an application, or are loaded out of order.</p>
+
+<p>The diagram below shows how files and classes are autoloaded.</p>
+
+<!---
+```diagram
+graph TD
+subgraph Autoloading
+  Autoload
+  Finished
+end
+
+subgraph AutoloadPath
+  AutoloadPath
+  NameError 
+end
+
+subgraph Loading
+  Load
+  LoadError
+end
+
+subgraph Parsing
+  Parse
+end
+
+%% Autoloading
+Entry[Start Here]-\->Autoload
+Autoload-- Empty Autoload Path -\->Finished
+Autoload-- Load path from autoload path -\->Load
+
+%% AutoloadPath Paths
+AutoloadPath--Cannot find a class to match Constant -\->NameError[NameError: uninitialized constant MyConstant]
+AutoloadPath-- Find file that matches the Constant -\->Load[Load File]
+
+%% Parse Paths
+Parse-- Encounter Constant we don't know -\->AutoloadPath
+Parse-. Finished Parsing .->Autoload
+
+%% Load Paths
+Load-- Class definition matches file -\->Parse[Parse Class]
+Load-- Class definition does not match file -\->LoadError[LoadError: Expected `file` to define Class]
+%% Load-. Finished Loading Class .->Autoload
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/0f5e2e3da6b82b2ac0c974d9c82e0297.png" alt="diagram image" class="full-width" /></p>
+
+<h3 id="problem">Problem</h3>
+
+<p>Load order dependency issues can happen due to nested class defintions.</p>
+
+<p>In the code snippet below, class <code class="highlighter-rouge">A</code> defines a class <code class="highlighter-rouge">B</code>. This means that the constant <code class="highlighter-rouge">B</code> is now defined. In the diagram above, we see that the un-nested class <code class="highlighter-rouge">B</code> depends on the <code class="highlighter-rouge">ConstantMissing</code> error to load it during auto-load. However, since <code class="highlighter-rouge">A::B</code> is defined, a <code class="highlighter-rouge">ConstantMissing</code> hook will never happen as <code class="highlighter-rouge">B</code> will resolve to <code class="highlighter-rouge">A::B</code>.</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">A</span>
+   <span class="k">class</span> <span class="nc">B</span>
+   <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">B</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>In particular, from the diagram above, this part never happens.</p>
+
+<p><img src="https://jules2689.github.io/gitcdn/images/website/doesnt_happen.png" alt="diagram image" /></p>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Caching Paths]]></title>
+      <url>/computers/ruby/bootsnap/2017/03/21/path_scanner/</url>
+      <content type="html"><![CDATA[<hr />
+
+<ul>
+  <li><a href="../bootsnap">Overview</a></li>
+  <li><a href="../caching_paths">Caching Paths</a></li>
+  <li><a href="../path_scanner">Path Scanner</a></li>
+</ul>
+
+<hr />
+
+<p>The Path Scanner is intended to identify all files and folders within a given path that are not in the bundler path already. As a result, we can then use this result to cache path loading.</p>
+
+<!---
+```diagram
+graph TD
+  StartPoint[Starting Point]-\->Relative?
+  Relative?[is path relative?]--yes-\->Error[raise RelativePathNotSupported error]
+  Relative?--no-\->DirListing[iterator for all requirables from path]
+  DirListing--Next entry-\->DescendentOfBundlePath[bundle path is a descendent of this path?**]
+  DirListing--No next entry-\->Return[return dirs and requireables]
+
+subgraph Directory Glob
+  DescendentOfBundlePath--yes-\->DirListing
+  DescendentOfBundlePath--no-\->Dir?
+  AddDir-\->DirListing
+  AddRequireable-\->DirListing
+  Dir?--yes-\->AddDir[Add to dirs]
+  Dir?--no-\->AddRequireable[Add to requireables]
+end
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/9cb9b39adf4bf924c16adbb0ef246aa4.png" alt="diagram image" width="100%" /></p>
+
+<p>** If the bundle path is a descendent of this path, we do additional checks to prevent recursing into the bundle path as we recurse through this path. We don’t want to scan the bundle path because anything useful in</p>
+
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+          <category> bootsnap </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+          <tag> bootsnap </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Constant Lookup]]></title>
+      <url>/computers/ruby/2017/03/21/constant_lookup/</url>
+      <content type="html"><![CDATA[<p>This it the flowchart that Ruby follows to look up a constant.
+The source for this flowchart was parse from the <a href="https://ruby-doc.org/core-2.1.0/Module.html#method-i-const_get">defintion for <code class="highlighter-rouge">const_get</code> from Ruby 2.1.0</a>.</p>
+
+<!---
+```diagram
+graph TD
+
+subgraph Entry
+  ARG[argc = num args, argv = args, mod = Module Called From]
+end
+
+subgraph Return
+  Return[return module]
+end
+
+subgraph ArgsParsing
+  ARG -- argc = 1 -\->NAME[name=arg, recursive=true]
+  ARG -- argc > 1 -\->   rb_scan_args[name, recursive = pull from args]
+end
+
+subgraph Errors
+  rb_eNameError[rb_eNameError wrong constant name]
+  rb_name_error[rb_name_error: wrong constant name]
+  rb_eTypeError[rb_eTypeError: does not refer to class/module]
+  rv_name_error2[rb_name_error: uninitialized constant]
+end
+
+subgraph SYMBOL_P
+  NAME -\-> SYMBOL_P?
+  rb_scan_args -\-> SYMBOL_P?
+
+  SYMBOL_P? -- name is symbol -\->   rb_is_const_id[is constant a method id?]
+  rb_is_const_id -- false -\-> rb_name_error
+  rb_is_const_id -- true -\-> RTEST[mod = RTEST ? rb_const_get : rb_const_get_at]
+  RTEST-\->Return
+end
+
+subgraph Encoding
+  SYMBOL_P? -- name is not a symbol -\->CheckEncoding[path = name, encoding from path]
+  CheckEncoding -- Not ASCII Compatible -\-> rb_eNameError
+end
+
+subgraph FindIDLoop
+  Loop[pointer < p_end]--false-\->Return
+  Loop--true-\->Loop2
+
+  Loop2--true, pointer += 1-\->Loop2
+
+  Loop2--false-\->CheckforColon[pointer == p_begin, aka is the first character still ':']
+  CheckforColon--true-\->rb_name_error
+  CheckforColon--false-\->rb_check_id_cstr[rb_check_id_cstr TODO, id = something]
+  rb_check_id_cstr-\->CheckPointer2[pointer not at the end? and first char is :]
+  CheckPointer2--true-\->CheckPointer2_1[pointer + 2 is > end or the second char is not ':']
+  CheckPointer2_1--true-\->rb_name_error
+  CheckPointer2_1--false-\->SkipDoubleColon[pointer += 2, p_begin = pointer]
+  SkipDoubleColon-\->ClassModuleCheck[is mod a class or module?]
+  CheckPointer2-\->ClassModuleCheck
+  ClassModuleCheck--false-\->rb_eTypeError
+  ClassModuleCheck--true-\->IdCheck[is id nil?]
+  IdCheck--false-\->idConstCheck[is id a constant?]
+  idConstCheck--false-\->rb_name_error
+  idConstCheck--true-\->ResolveMod[mod = rb_const_get OR rb_const_get_at]
+  IdCheck--true-\->ConstCheckId[part is uppercase OR part is not a constant]
+  ConstCheckId--false-\->CheckClassForConst[is const defined in class?]
+  ConstCheckId--true-\->rb_name_error
+  CheckClassForConst--true-\->SetIdPart[id = part]
+  SetIdPart-\->idConstCheck
+  CheckClassForConst--false-\->rv_name_error2
+  ResolveMod-\->Loop
+end
+
+subgraph DirectConstant
+  DirectConstantCheck[Check if first 2 chars are ::]--true-\->SetDirect[pointer += 2, p_begin = pointer, mod = Object. Basically remove the ::, set beginning after. This implies the module will be Object]
+  SetDirect-\->Loop
+  DirectConstantCheck--false-\->Loop
+end
+
+CheckEncoding-\->InitalizePathVars[pointer=beginning of path, p_begin = pointer, p_eng = pointer + length of path]
+
+subgraph CheckLength??TODO
+  InitalizePathVars-\->PathLength[Path is empty or nil?]
+  PathLength --true-\-> rb_eNameError
+  PathLength --false-\-> DirectConstantCheck
+end
+
+%% Styling
+classDef error fill:#FFCCCC;
+class rb_name_error error;
+class rb_eNameError error;
+class rb_eTypeError error;
+class rv_name_error2 error;
+```
+--->
+
+<p><img src="https://jules2689.github.io/gitcdn/images/website/const_get.png" alt="diagram image" class="full-width" /></p>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Caching Paths]]></title>
+      <url>/computers/ruby/bootsnap/2017/03/21/caching_paths/</url>
+      <content type="html"><![CDATA[<hr />
+
+<ul>
+  <li><a href="../bootsnap">Overview</a></li>
+  <li><a href="../caching_paths">Caching Paths</a></li>
+  <li><a href="../path_scanner">Path Scanner</a></li>
+</ul>
+
+<hr />
+
+<p>Caching paths is the main function of bootsnap. Previously, I mentioned that Bootsnap creates 2 caches:</p>
+
+<ul>
+  <li><strong>Stable</strong>: For Gems and Rubies since these are highly unlikely to change</li>
+  <li><strong>Volatile</strong>: For everything else, like your app code, since this is likely to change</li>
+</ul>
+
+<p>This path is shown in the flowchart below. In a number of instances, <code class="highlighter-rouge">scan</code> is mentioned. This refers to the operation performed by the <a href="../path_scanner">Path Scanner</a>.</p>
+
+<!---
+```diagram
+graph TD
+
+Entry[Starting Point]-\->pathInGem
+
+subgraph Stability Check
+  pathInGem[is the path in a gem?]--yes-\->Stable
+  pathInGem--No-\->pathInRuby[is the path in a Ruby install?]
+  pathInRuby--Yes-\->Stable
+  pathInRuby--No-\->Volatile
+end
+
+subgraph Stable Cache
+  Stable-\->GetStableEntriesDir[get entries and directories for path from cache]
+  GetStableEntriesDir--got entries-\->StableCacheHit[Cache Hit!]
+  StableCacheHit-\->StableReturn
+  GetStableEntriesDir--did not get entries-\->StableCacheMiss[Cache Miss. Scan for entries and dirs. Expensive]
+  StableCacheMiss-\->StoreStableCache[store result in cache with mtime of 0, since we dont use it for stable]
+  StoreStableCache-\->StableReturn[ Return entries, dirs]
+end
+
+subgraph Volatile Cache
+  Volatile-\->GetVolatileEntriesDir[get entries and directories for path from cache]
+  GetVolatileEntriesDir-\->LatestMTime[Get latest mtime from dir and entries]
+  LatestMTime--mtime = -1-\->ReturnEmpty[Path doesn't exist, return empty dir and entries]
+  LatestMTime--mtime==cached_mtime-\->VolatileCacheHit[Cache Hit!]
+  VolatileCacheHit-\->VolatileReturn[Return dir and entries]
+  LatestMTime--else-\->VolatileCacheMiss[Cache Miss. Scan for entries and dirs. Expensive]
+  VolatileCacheMiss-\->StoreVolatileCache[store result in cache with mtime intact since we use it for volatile cache]
+  StoreVolatileCache-\->VolatileReturn
+end
+```
+--->
+<p><img src="http://jules2689.github.io/gitcdn/images/latex/0a9daea578e9a1b60cf49c6b226e444c.png" alt="diagram image" width="100%" /></p>
+
+<h3 id="mtimes-modified-times-of-files-and-directories">Mtimes (modified times) of files and directories</h3>
+
+<p>We do not take mtimes into account for stable caches. This is a more expensive operation so we avoid it when we can (this avoids as many filesystem calls as we can).</p>
+
+<ul>
+  <li>This means for a “stable” cache, we simply use <code class="highlighter-rouge">0</code> as the mtime for all files, so there is no effect on the cache heuristic.</li>
+  <li>For a “volatile” cache however, we find the maximum mtime of all files and directories in the given path. This means that if any file within a directory is added or removed, the cache is invalidated.
+    <ul>
+      <li>Note, the mtime is initialized at <code class="highlighter-rouge">-1</code>, so if the path doesn’t exist, <code class="highlighter-rouge">-1</code> will be returned.</li>
+    </ul>
+  </li>
+</ul>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+          <category> bootsnap </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+          <tag> bootsnap </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Bootsnap]]></title>
+      <url>/computers/ruby/bootsnap/2017/03/21/bootsnap/</url>
+      <content type="html"><![CDATA[<hr />
+
+<ul>
+  <li><a href="../bootsnap">Overview</a></li>
+  <li><a href="../caching_paths">Caching Paths</a></li>
+  <li><a href="../path_scanner">Path Scanner</a></li>
+</ul>
+
+<hr />
+
+<p>Bootsnap is a library that overrides <code class="highlighter-rouge">Kernel#require</code>, <code class="highlighter-rouge">Kernel#load</code>, <code class="highlighter-rouge">Module#autoload</code> and in the case that <code class="highlighter-rouge">ActiveSupport</code> is used, it will also override a number of <code class="highlighter-rouge">ActiveSupport</code> methods.</p>
+
+<p>Bootsnap creates 2 kinds of caches, a stable, long lived cache out of Ruby and Gem directories. These are assumed to <em>never</em> change and so we can cache more aggresively. Application code is expected to change frequently, so it is cached with little aggression (short lived bursts that should last only as long as the app takes to boot). This is the “volatile” cache.</p>
+
+<p>Below is a diagram explaining how the overrides work.</p>
+
+<!---
+```diagram
+graph TD
+
+subgraph Bootsnap Object
+  cache
+  autoload_path_cache
+  store-\->cache
+end
+
+subgraph ActiveSupport
+  depend_onSuper[depend_on]
+  load_missing_constantSuper[load_missing_constant]
+  remove_constantSuper[remove_constant]
+  search_for_fileSuper[search_for_file]
+end
+
+subgraph ActiveSupport Overrides
+  autoload_path=--reinitializes-\->autoload_path_cache
+  autoloadable_module?-.has_dir?.->autoload_path_cache
+  search_for_file-.with cache.->autoload_path_cache
+  search_for_file-.without cache.->search_for_fileSuper
+  search_for_file-\->remove_constant
+  remove_constant-.->remove_constantSuper
+
+  depend_onExt[depend_on]
+  load_missing_constantExt[load_missing_constant]
+
+  load_missing_constant-.->load_missing_constantExt
+  depend_on-.->depend_onExt
+
+  depend_onExt-.rescue LoadError.->depend_onSuper
+  load_missing_constantExt-.rescue NameError.->load_missing_constantSuper
+end
+
+subgraph Kernel Require Overrides
+  Kernel#require-.->cache
+  Kernel#load-.->cache
+  Module#autoload-.->cache
+end
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/432d52f1123c0bbd45090115ebfe12da.png" alt="diagram image" width="100%" /></p>
+
+<p>In this diagram, you might notice that we refer to <code class="highlighter-rouge">cache</code> and <code class="highlighter-rouge">autoload_path_cache</code> as the main points of override. These are calculated using the concepts described in <a href="../caching_paths">Caching Paths</a>.</p>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> ruby </category>
+        
+          <category> bootsnap </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> ruby </tag>
+        
+          <tag> bootsnap </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Wakame (Seaweed)]]></title>
+      <url>/culinary/ingredients/2017/03/20/wakame/</url>
+      <content type="html"><![CDATA[<p><img src="http://img.mindbodygreen.com/image/upload/c_limit,w_350,f_auto/ftr/wakame.jpg" align="right" width="40%" /></p>
+
+<p>A staple in Japanese cuisine, Wakame (ワカメ or Undaria pinnatifida) is a sea vegetable/edible seaweed.</p>
+
+<p>A subtly sweet flavour that is ripe with umami. It is usually very salty too. It has a satiny texture.</p>
+
+<p>The leaves expand during cooking, so cut the pieces up with that in mind.</p>
+
+<h2 id="uses">Uses</h2>
+
+<ul>
+  <li>Wakame Salad (seaweed salad)</li>
+  <li>Toppings for sandwiches, meat dishes, etc</li>
+  <li>Soups</li>
+  <li>Side dish</li>
+</ul>
+
+<h2 id="minerals-and-nutrients">Minerals and Nutrients</h2>
+
+<h3 id="watch-out-for">Watch out for</h3>
+
+<ul>
+  <li>High in sodium</li>
+</ul>
+
+<h3 id="good-for">Good for</h3>
+
+<p>Wakame is low in calories and is a great source of vitamins and minerals. It includes:</p>
+
+<ul>
+  <li>iodine</li>
+  <li>iron</li>
+  <li>calcium</li>
+  <li>magnesium</li>
+  <li>folate</li>
+  <li>vitamin A</li>
+  <li>vitamin C</li>
+  <li>vitamin D</li>
+  <li>vitamin E</li>
+  <li>vitamin K</li>
+  <li>vitamin B2</li>
+  <li>lignans</li>
+  <li>fucoxanthin</li>
+  <li>eicosapentaenoic acid, an omega-3 fatty acid</li>
+</ul>
+
+<h2 id="nutritional-information">Nutritional Information</h2>
+
+<p>Values are per 100g</p>
+
+<h3 id="overview">Overview</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th> </th>
+      <th>Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Calories</td>
+      <td>45</td>
+    </tr>
+    <tr>
+      <td>Carbohydrates</td>
+      <td>9.14g</td>
+    </tr>
+    <tr>
+      <td>Sugars</td>
+      <td>0.65g</td>
+    </tr>
+    <tr>
+      <td>Dietary Fiber</td>
+      <td>0.5g</td>
+    </tr>
+    <tr>
+      <td>Fat</td>
+      <td>0.64g</td>
+    </tr>
+    <tr>
+      <td>Protein</td>
+      <td>3.03g</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="vitamins">Vitamins</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Vitamin</th>
+      <th>Percent</th>
+      <th>Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Thiamine (B1)</td>
+      <td>5%</td>
+      <td>0.06 mg</td>
+    </tr>
+    <tr>
+      <td>Riboflavin (B2)</td>
+      <td>19%</td>
+      <td>0.23 mg</td>
+    </tr>
+    <tr>
+      <td>Niacin (B3)</td>
+      <td>11%</td>
+      <td>1.6 mg</td>
+    </tr>
+    <tr>
+      <td>Pantothenic acid (B5)</td>
+      <td>14%</td>
+      <td>0.697 mg</td>
+    </tr>
+    <tr>
+      <td>Folate (B9)</td>
+      <td>49%</td>
+      <td>196 μg</td>
+    </tr>
+    <tr>
+      <td>Vitamin C</td>
+      <td>4%</td>
+      <td>3 mg</td>
+    </tr>
+    <tr>
+      <td>Vitamin E</td>
+      <td>7%</td>
+      <td>1 mg</td>
+    </tr>
+    <tr>
+      <td>Vitamin K</td>
+      <td>5%</td>
+      <td>5.3 μg</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="minerals">Minerals</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Mineral</th>
+      <th>Percent</th>
+      <th>Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Calcium</td>
+      <td>15%</td>
+      <td>150 mg</td>
+    </tr>
+    <tr>
+      <td>Iron</td>
+      <td>17%</td>
+      <td>2.18 mg</td>
+    </tr>
+    <tr>
+      <td>Magnesium</td>
+      <td>30%</td>
+      <td>107 mg</td>
+    </tr>
+    <tr>
+      <td>Manganese</td>
+      <td>67%</td>
+      <td>1.4 mg</td>
+    </tr>
+    <tr>
+      <td>Phosphorus</td>
+      <td>11%</td>
+      <td>80 mg</td>
+    </tr>
+    <tr>
+      <td>Sodium</td>
+      <td>58%</td>
+      <td>872 mg</td>
+    </tr>
+    <tr>
+      <td>Zinc</td>
+      <td>4%</td>
+      <td>0.38 mg</td>
+    </tr>
+  </tbody>
+</table>
+
+]]></content>
+      <categories>
+        
+          <category> culinary </category>
+        
+          <category> ingredients </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> culinary </tag>
+        
+          <tag> ingredients </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Convolutional Neural Networks]]></title>
+      <url>/computers/artificial_intelligence/neural_networks/2017/03/20/convolutional_neural_networks/</url>
+      <content type="html"><![CDATA[<p>CNNs are good for image recognition and classification. They also excel at natural language processing tasks. An early predecessor called LeNet was built in the late 80s and throughout the 90s. It was mainly used for OCR.</p>
+
+<p>For reference, <a href="https://ujjwalkarn.me/2016/08/11/intuitive-explanation-convnets/">this article</a> was used.</p>
+
+<h2 id="glossary-and-concepts">Glossary and Concepts</h2>
+
+<ul>
+  <li><strong>Image</strong>s are represented by a matrix of values based on their channel</li>
+  <li><strong>Channel</strong>s are the values represented by a component of an image, (e.g. RGB or CMYK). A typical image has 3 components for RGB, a grayscale image has 1 component.</li>
+</ul>
+
+<h2 id="operations-of-cnns">Operations of CNNs</h2>
+
+<ol>
+  <li>Convolution</li>
+  <li>Non Linearity (ReLU)</li>
+  <li>Pooling or sub sampling</li>
+  <li>Classification (fully connected sublayer)</li>
+</ol>
+
+<h3 id="convolution">Convolution</h3>
+
+<p>This is a <strong>WIP</strong></p>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> artificial_intelligence </category>
+        
+          <category> neural_networks </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> artificial_intelligence </tag>
+        
+          <tag> neural_networks </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Kubernetes Configs]]></title>
+      <url>/computers/kubernetes/2017/03/14/configs/</url>
+      <content type="html"><![CDATA[<p>To run a Kubernetes cluster, you can group services in <code class="highlighter-rouge">namespace</code>s. This will keep a grouping of services and deployments in separate namespaced sections. To create a namespace run <code class="highlighter-rouge">kubectl create namespace &lt;NAMESPACE&gt;</code></p>
+
+<p>After creating a namespace, you can apply configurations. In particular you want <code class="highlighter-rouge">deployment</code>s which will run the containers. <code class="highlighter-rouge">Service</code>s expose those deployments within the cluster. This makes them accessible to other deployments.</p>
+
+<p>Below are pieces of configurations. You can combine many together and apply them all at once.</p>
+
+<p>For example, my website defines a number of configurations all in one yaml file.</p>
+
+<ul>
+  <li>a deployment for an app server</li>
+  <li>exposes the app server with a service definition</li>
+  <li>a deployment and service is running for Postgres</li>
+  <li>In the App server defintion, we can access the database using <code class="highlighter-rouge">postgres.NAMESPACE.svc.cluster.local</code></li>
+  <li>Finally, an ingress is defined to expose the app on a URL.</li>
+</ul>
+
+<p>Run <code class="highlighter-rouge">kubectl apply -f PathToYaml.yml -n NAMESPACE</code> to apply it.</p>
+
+<h3 id="deployment">Deployment</h3>
+
+<p>A deployment should specify a few things. Namely, it should specify the docker image you would like to run, volumes you’d like to mount, and environment variables to use in the container.</p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">extensions/v1beta1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Deployment</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">website</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">website</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">replicas</span><span class="pi">:</span> <span class="s">1</span> <span class="c1"># We have one backup replica</span>
+  <span class="na">template</span><span class="pi">:</span>
+    <span class="na">metadata</span><span class="pi">:</span>
+      <span class="na">labels</span><span class="pi">:</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">website</span>
+        <span class="na">app</span><span class="pi">:</span> <span class="s">website</span>
+        <span class="na">environment</span><span class="pi">:</span> <span class="s">production</span>
+    <span class="na">spec</span><span class="pi">:</span>
+      <span class="na">containers</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">website</span>
+        <span class="c1"># This image will pull from the docker registry</span>
+        <span class="c1"># I have built and pushed this image already</span>
+        <span class="na">image</span><span class="pi">:</span> <span class="s">jules2689/website:v1.03</span>
+        <span class="na">imagePullPolicy</span><span class="pi">:</span> <span class="s">Always</span>
+        <span class="c1"># The container runs the application on port 3000</span>
+        <span class="na">ports</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="na">containerPort</span><span class="pi">:</span> <span class="s">3000</span>
+            <span class="na">name</span><span class="pi">:</span> <span class="s">http</span>
+        <span class="c1"># These are the environment variables to use</span>
+        <span class="na">env</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">ENV</span>
+            <span class="na">value</span><span class="pi">:</span> <span class="s">production</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">RAILS_ENV</span>
+            <span class="na">value</span><span class="pi">:</span> <span class="s">production</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">RAILS_LOG_TO_STDOUT</span>
+            <span class="na">value</span><span class="pi">:</span> <span class="s1">'</span><span class="s">1'</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">ASSET_HOST</span>
+            <span class="na">value</span><span class="pi">:</span> <span class="s1">'</span><span class="s">http://website2.jnadeau.ca'</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">DATABASE_URL</span>
+            <span class="c1"># This value actually corresponds to another deployment. Once we're done we can refer</span>
+            <span class="c1"># to other deployments by `NAME.NAMESPACE.svc.cluster.local:PORT`</span>
+            <span class="na">value</span><span class="pi">:</span> <span class="s">postgres://postgres@postgres.website.svc.cluster.local:5432/website_production</span>
+        <span class="c1"># This will point the volume with the name 'ejson-keys' to `/opt/ejson/keys`</span>
+        <span class="na">volumeMounts</span><span class="pi">:</span>
+          <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">ejson-keys</span>
+            <span class="na">mountPath</span><span class="pi">:</span> <span class="s2">"</span><span class="s">/opt/ejson/keys"</span>
+            <span class="na">readOnly</span><span class="pi">:</span> <span class="no">true</span>
+      <span class="c1"># This will load the secret with the name `ejson-keys` to the volume `ejson-keys`</span>
+      <span class="c1"># The secret was set manually beforehand.</span>
+      <span class="na">volumes</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">name</span><span class="pi">:</span> <span class="s">ejson-keys</span>
+        <span class="na">secret</span><span class="pi">:</span>
+          <span class="na">secretName</span><span class="pi">:</span> <span class="s">ejson-keys</span>
+</code></pre></div></div>
+
+<h3 id="service">Service</h3>
+
+<p>Services will expose the deployment internally.</p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nn">---</span>
+<span class="na">apiVersion</span><span class="pi">:</span> <span class="s">v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">website</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">website</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">website</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">website</span>
+    <span class="na">environment</span><span class="pi">:</span> <span class="s">production</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">type</span><span class="pi">:</span> <span class="s">NodePort</span> <span class="c1"># This will open up a port from port 80 to port 3000 in the deployment</span>
+  <span class="na">ports</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">port</span><span class="pi">:</span> <span class="s">80</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">http</span>
+    <span class="na">targetPort</span><span class="pi">:</span> <span class="s">3000</span>
+  <span class="na">selector</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">website</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">website</span>
+    <span class="na">environment</span><span class="pi">:</span> <span class="s">production</span>
+</code></pre></div></div>
+
+<h3 id="ingress">Ingress</h3>
+
+<p>Ingresses will setup network intakes from external sources. In my setup, I will be taking data on port 80 from <code class="highlighter-rouge">website.jnadeau.ca</code> and passing it along to the service called website.</p>
+
+<p>I have an Nginx deployment and service running elsewhere. That deployment is configured to pass the data upstream to registered deployements based on the host.</p>
+
+<div class="language-yml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">extensions/v1beta1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Ingress</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">website</span>
+  <span class="na">namespace</span><span class="pi">:</span> <span class="s">website</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">website</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">website</span>
+    <span class="na">environment</span><span class="pi">:</span> <span class="s">production</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">rules</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">host</span><span class="pi">:</span> <span class="s">website2.jnadeau.ca</span>
+    <span class="na">http</span><span class="pi">:</span>
+      <span class="na">paths</span><span class="pi">:</span>
+      <span class="pi">-</span> <span class="na">backend</span><span class="pi">:</span>
+          <span class="na">serviceName</span><span class="pi">:</span> <span class="s">website</span>
+          <span class="na">servicePort</span><span class="pi">:</span> <span class="s">80</span>
+</code></pre></div></div>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> kubernetes </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> kubernetes </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Kubernetes]]></title>
+      <url>/computers/kubernetes/2017/03/14/Overview/</url>
+      <content type="html"><![CDATA[<p>Kubernetes is an orchestration layer to manage containerized applications. In a traditional system, you either run on bare metal or with containers on a host. With Kubernetes, containerized applications and services can be spread across many hosts. This means if one host goes down, the work and containers can be redistributed to other nodes.</p>
+
+<p>Example:</p>
+
+<!---
+```diagram
+graph BT
+  subgraph Kubernetes
+    Node1((Node1))-\->Cluster
+    Node2((Node2))-\->Cluster
+    Node3((Node3))-\->Cluster
+  end
+  subgraph Node
+    App-\->Node3
+    MySQL-\->Node3
+    Redis-\->Node3
+    Nginx-\->Node3
+  end
+Nginx---Internet
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/57bfba886cdabd6803742ab499d85e11.png" alt="diagram image" height="250px" /></p>
+
+<p>Each node can contain random services, or it can contain specific ones. In the example above, a node contains one of every service required to run an application. This means that if a node goes down, the work can be redistributed to other nodes, without any downtime, while Kubernetes also works on bringing that node back to life.</p>
+
+<h2 id="glossary">Glossary</h2>
+<p>Borrowed from <a href="https://github.com/karanthukral">Karan Thukral</a></p>
+<ul>
+  <li>Cluster – The set of machines you are running the application on</li>
+  <li>Node – A single machine</li>
+  <li>Pods – A group of containers that work together to achieve a certain task.</li>
+  <li>Service – A way to externally expose (externally and internally) a set of pods that work together</li>
+  <li>Labels – An arbitrary tag that can be places on kubernetes resources and can be used to filter on</li>
+  <li>Selectors – Way for the user to identify a set of objects based on labels assigned to them</li>
+  <li>Controller – A reconciliation loop that drives current state towards desired state</li>
+</ul>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> kubernetes </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> kubernetes </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[umami]]></title>
+      <url>/culinary/2017/03/13/umami/</url>
+      <content type="html"><![CDATA[<h2 id="umami">Umami</h2>
+
+<p>(/uˈmɑːmi/)</p>
+
+<p>Umami is also known as the “savoury taste” and is one of the five basic tastes. It is described as brothy or meaty.</p>
+
+<p>People taste umami using taste receptors for glutamate (hence why monosodium glutamate [MSG] is essentially pure umami).</p>
+
+<h3 id="wip">WIP</h3>
+]]></content>
+      <categories>
+        
+          <category> culinary </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> culinary </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[Logical Clocks]]></title>
+      <url>/computers/distributed_systems/2017/03/13/logical_clocks/</url>
+      <content type="html"><![CDATA[<p><a href="http://web.cs.iastate.edu/~cs554/NOTES/Ch6-LogicalClocks.pdf">This</a> is a great presentation.</p>
+
+<p>Logical clocks are used to agree on order in which events occur. The absolute/real time is not important in this concept.</p>
+
+<p>Event ordering can be based on any number of factors. In a local system, CPU time can be used. But in a distributed system, there is no perfectly synchronized time or clock that can be used, and local times may not be in sync (and probably are not). <a href="https://en.wikipedia.org/wiki/Leslie_Lamport">Lamport</a> suggested a logical clock be used to address this.</p>
+
+<h4 id="key-concepts">Key concepts</h4>
+
+<ul>
+  <li>Processes exchange messages</li>
+  <li>Message must be sent before received</li>
+  <li>Send/receive used to order events and synchronize logical clocks</li>
+</ul>
+
+<h4 id="properties">Properties</h4>
+
+<ul>
+  <li>If A happens before B in the same process (or system), then <code class="highlighter-rouge">A -&gt; B</code></li>
+  <li><code class="highlighter-rouge">A -&gt; B</code> also means that A sent the message and B means the receipt of it</li>
+  <li>Relation is transitive: e.g <code class="highlighter-rouge">A -&gt; B</code> and <code class="highlighter-rouge">B -&gt; C</code> implies <code class="highlighter-rouge">A -&gt; C</code></li>
+  <li>Unordered events are concurrent: <code class="highlighter-rouge">A !-&gt; B</code> and <code class="highlighter-rouge">B !-&gt;</code> A implies <code class="highlighter-rouge">A || B</code></li>
+</ul>
+
+<h2 id="lamports-logical-clocks">Lamport’s Logical Clocks</h2>
+
+<ul>
+  <li>If <code class="highlighter-rouge">A -&gt; B</code> then <code class="highlighter-rouge">timestamp(A) &lt; timestamp(B)</code></li>
+</ul>
+
+<h3 id="lamports-algorithm">Lamport’s Algorithm</h3>
+
+<!---
+```diagram
+sequenceDiagram
+Note left of i: Logical Clock: L(i)
+Note right of j: Logical Clock: L(j)
+loop Every Event: i => j
+i->>i: Event Occurs. L(i) = L(i) + 1
+i->>j: Event Sent. Send L(i)
+j->>j: Event Received. L(j) = MAX(L(i), L(J)) + 1
+end
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/8df698ce798b092930d7fb6955a38bc6.png" alt="diagram image" height="450px" /></p>
+
+<p><strong>Note</strong>: <code class="highlighter-rouge">A -&gt; B</code> implies <code class="highlighter-rouge">L(A) &lt; L(B)</code>, but <code class="highlighter-rouge">L(A) &lt; L(B)</code> does not necessarily imply <code class="highlighter-rouge">A -&gt; B</code>. In other words, <code class="highlighter-rouge">A -&gt; B</code> implies that the logical clock of A is less than that of B, but the logical clock of A being less than that of B does <em>not</em> imply that <code class="highlighter-rouge">A -&gt; B</code>.</p>
+
+<h2 id="totally-ordered-multicast">Totally Ordered Multicast</h2>
+
+<p><strong>Example</strong>: We have a large distributed database. We need to make sure that replications are seen in the same order in all replicas. This requires us to cast the replicas to all systems in an absolutely total order.</p>
+
+<p><strong>Example Situation:</strong> The following events occur:</p>
+<ul>
+  <li>A) We have $1000 in a bank account.</li>
+  <li>B) We add $100</li>
+  <li>C) We calculate 1% interest on the balance.</li>
+</ul>
+
+<p>If the order is ABC, then the 1% interest will be $1100 * 0.01 = $11. But if the order is ACB, then the interest will be $1000 * 0.01 = $10. In this case, the order matters as the interest is different.</p>
+
+<p>Lamport’s logical clocks can be applied to implement a totally‐ordered multicast in a distributed system.</p>
+
+<h3 id="implementation">Implementation</h3>
+
+<p>Assumptions:</p>
+<ul>
+  <li>No messages are lost</li>
+  <li>Messages from the same sender are received in the same order as they were sent</li>
+</ul>
+
+<p>Process <code class="highlighter-rouge">P(i)</code> will send out a message <code class="highlighter-rouge">M(i)</code> to all others with timestamp <code class="highlighter-rouge">T(i)</code>. An incoming message is queued according to it’s timestamp. <code class="highlighter-rouge">P(i)</code> will pass a message to its own application if it meets 2 criteria: the message is at the head of the queue, the message has been acked by all other processes.</p>
+
+<!---
+```diagram
+sequenceDiagram
+P(j)->>P(i): Puts Message m(j) at t=1
+
+Note right of P(i): P(i) sends out m(i) at t=2 because the receipt of m(j) caused L(i) to increment by 1.
+
+P(i)->>P(j): Puts Message m(i) at t=2
+P(i)->>P(k): Puts Message m(i) at t=2
+
+Note right of P(i): P(i) sends out m(i) to P(k) at t=2 before P(k) gets M(j) from P(j) at t=1. This is okay though because they are from different senders and the timestamps will sort it out.
+
+Note left of P(j): Since all P(i..n) have ACKed M(i), we would normally be able to process it. However, M(i) is not at the head of the queue, M(j) is.
+
+P(j)->>P(k): Puts Message m(j) at t=1
+
+opt m(j) can be processed now
+Note left of P(j): Since all P(i..n) have ACKed m(j) and m(j) is at the head of the queue, we can process it now.
+P(i)->>P(i): Perform Message m(j)
+P(j)->>P(j): Perform Message m(j)
+P(k)->>P(k): Perform Message m(j)
+end
+
+opt M(i) can be processed now
+Note left of P(j): Since all P(i..n) have ACKed m(i) and m(i) is at the head of the queue, we can process it now.
+P(i)->>P(i): Perform Message m(i)
+P(j)->>P(j): Perform Message m(i)
+P(k)->>P(k): Perform Message m(i)
+end
+```
+--->
+<p><img src="https://jules2689.github.io/gitcdn/images/website/images/diagram/598942c362d82725a25fd056b83001b8.png" alt="diagram image" width="100%" /></p>
+
+<p>All processes will end up with the same messages with the same timestamps, so order can be sorted out locally and therefore all messages are delivered in the same order.</p>
+]]></content>
+      <categories>
+        
+          <category> computers </category>
+        
+          <category> distributed_systems </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> computers </tag>
+        
+          <tag> distributed_systems </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+    <entry>
+      <title><![CDATA[braindump]]></title>
+      <url>/default/2017/03/02/braindump/</url>
+      <content type="html"><![CDATA[<h2 id="things-to-investigate-further">Things to investigate further</h2>
+<ul>
+  <li><em>tl;dr</em> kubelet - the thing that actually runs stuff - can run from a static manifest, anything you put in /etc/kubernetes, it will run</li>
+  <li>Runit Services</li>
+  <li>Amdahl’s Law</li>
+  <li>CIDR Block</li>
+  <li>IP Address Blocks</li>
+  <li>UDP Hole Punching</li>
+</ul>
+
+<h2 id="websites-to-read">Websites to read</h2>
+<ul>
+  <li>http://basho.com/posts/technical/why-vector-clocks-are-easy/</li>
+  <li>http://basho.com/posts/technical/why-vector-clocks-are-hard/</li>
+  <li>http://basho.com/posts/technical/vector-clocks-revisited/</li>
+  <li>http://basho.com/posts/technical/vector-clocks-revisited-part-2-dotted-version-vectors/</li>
+  <li>http://valerieaurora.org/hash.html</li>
+</ul>
+]]></content>
+      <categories>
+        
+          <category> default </category>
+        
+      </categories>
+      <tags>
+        
+          <tag> default </tag>
+        
+      </tags>
+      <tags></tags>
+    </entry>
+  
+</search>

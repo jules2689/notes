@@ -1,1 +1,2 @@
-docs
+jekyll/_posts/*
+.DS_Store

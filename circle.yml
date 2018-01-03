@@ -33,9 +33,9 @@ test:
     - git push origin master || true
 
     # Publish the Github Pages Site
+    - ruby bin/build.rb
     - mv jekyll/* .
     - rm -rf jekyll
-    - ruby ./bin/toc.rb
     - git status
     - git add --all .
     - git commit -m 'Build jekyll site' || true
