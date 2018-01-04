@@ -5,7 +5,7 @@ require 'time'
 
 files = if ARGV.empty?
   FileUtils.rm_rf(Dir.glob("jekyll/_posts/*"))
-  Dir.glob('**/*.md').reject{ |f| f['jekyll'] || File.basename(f) == "README.md" }
+  Dir.glob('**/*.md').reject{ |f| f['jekyll'] || f['vendor'] || File.basename(f) == "README.md" }
 else
   [ARGV].flatten
 end
