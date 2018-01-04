@@ -40,7 +40,7 @@ This website is envisioned to be a handbook or styleguide for all people working
 
 As we grow, online meet-ups will likely not scale and people will want to have more meaningful in person collaborations and discussions. The website will need more community to continue to scale and continue to be a place that people frequent.
 
-In Phase III, we hold our first conference. Development has had conferences of so many varieties, but there has never been a conference dedicated to the concepts that form developer productivity.
+In Phase III, we hold our first conference. Development has had conferences of so many varieties, but there has never been a conference dedicated to the concepts that form developer productivity. That being said some conferences, such as Velocity and DevDaysTO, dedicate portions of their content towards developer productivity but no known conference is targetted specifically towards developer productivity.
 
 By holding the conference, we aim to become a driving force behind Developer Productivity and increase community knowledge and commitment to this community.
 
@@ -49,3 +49,5 @@ By holding the conference, we aim to become a driving force behind Developer Pro
 ## Phase N
 
 We may not need to go much further than a conference. If these phases are successful, we may have found a recipe to continue to grow and continue to be a power house in the developer productivity community.
+
+We also don’t have all of the ideas and don’t want to be prescriptive about how the community grows. We want to see how it naturally grows and in what direction the community wants to grow.
